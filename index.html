@@ -1,0 +1,1833 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#d9601a">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Custo de Impressão 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chivo:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: bancada de trabalho — formulário em blocos à esquerda, "etiqueta de orçamento" fixa à direita; empilha no celular */
+:root {
+  --bg: #eef0f2;
+  --panel: #ffffff;
+  --ink: #1b2229;
+  --muted: #5d6874;
+  --line: #d5dae0;
+  --field: #f6f7f9;
+  --accent: #d9601a;       /* bico quente */
+  --accent-ink: #ffffff;
+  --c-fil: #d9601a;
+  --c-ene: #2f7fb8;
+  --c-opc: #6b5bb5;
+  --c-ext: #3b9670;
+  --c-fal: #b8424a;
+  --font-display: "Chivo", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161b; --panel: #1a2027; --ink: #e7ebef; --muted: #98a3ae; --line: #2c343d;
+    --field: #141a20; --accent: #f07a33; --accent-ink: #1a0d04;
+    --c-fil: #f07a33; --c-ene: #5aa6dc; --c-opc: #9a8ce0; --c-ext: #5cbf93; --c-fal: #e0686f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161b; --panel: #1a2027; --ink: #e7ebef; --muted: #98a3ae; --line: #2c343d;
+  --field: #141a20; --accent: #f07a33; --accent-ink: #1a0d04;
+  --c-fil: #f07a33; --c-ene: #5aa6dc; --c-opc: #9a8ce0; --c-ext: #5cbf93; --c-fal: #e0686f;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+}
+.wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 24px; }
+
+header { display: grid; gap: 6px; }
+h1 {
+  font-family: var(--font-display); font-weight: 800; font-size: clamp(26px, 4vw, 36px);
+  margin: 0; letter-spacing: -0.01em; text-wrap: balance;
+}
+.lede { margin: 0; color: var(--muted); max-width: 62ch; }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
+@media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+.blocks { display: grid; gap: 16px; min-width: 0; }
+fieldset {
+  margin: 0; border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--panel); padding: 16px 18px 18px; min-width: 0;
+  display: grid; gap: 14px;
+}
+legend {
+  font-family: var(--font-display); font-weight: 600; font-size: 13px;
+  text-transform: uppercase; letter-spacing: 0.08em; padding: 0 6px; margin-left: -6px;
+  display: flex; align-items: center; gap: 8px;
+}
+legend .dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px 14px; }
+.f { display: grid; gap: 5px; min-width: 0; align-content: start; }
+.f label, .sublabel { font-size: 13px; font-weight: 500; color: var(--ink); }
+.hint { font-size: 12px; color: var(--muted); }
+.inp {
+  display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: 7px;
+  background: var(--field); overflow: hidden;
+}
+.inp:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+.inp span {
+  font-family: var(--font-mono); font-size: 12px; color: var(--muted);
+  padding: 0 9px; display: flex; align-items: center; white-space: nowrap;
+}
+.inp input, .inp select {
+  flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink);
+  font-family: var(--font-mono); font-size: 15px; padding: 9px 10px; outline: none;
+  font-variant-numeric: tabular-nums;
+}
+.inp select { font-family: var(--font-body); font-size: 14px; cursor: pointer; }
+.time { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.time .inp input { padding-right: 4px; }
+.row .tempo { grid-column: span 2; }
+@media (max-width: 480px) { .row .tempo { grid-column: 1 / -1; } }
+
+/* Importar do fatiador */
+.importar {
+  display: grid; gap: 8px; border: 1.5px dashed var(--line); border-radius: 8px;
+  padding: 12px 14px; background: var(--field); transition: border-color .15s ease;
+}
+.importar.drag { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--field)); }
+.importar-top { display: flex; gap: 10px 14px; align-items: center; flex-wrap: wrap; }
+.importar-top .hint { flex: 1; min-width: 200px; }
+.imp-status { font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; color: var(--c-ext); margin: 0; }
+.imp-status.erro { color: var(--c-fal); font-family: var(--font-body); }
+#placaBox { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+#placaBox .inp { min-width: 200px; }
+
+/* Segmentado 110 / 220 */
+.seg { display: flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; background: var(--field); }
+.seg label { flex: 1; position: relative; cursor: pointer; margin: 0; }
+.seg input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.seg span {
+  display: block; text-align: center; padding: 9px 6px; font-family: var(--font-mono); font-size: 14px; color: var(--muted);
+}
+.seg label + label span { border-left: 1px solid var(--line); }
+.seg input:checked + span { background: var(--ene-bg, color-mix(in srgb, var(--c-ene) 18%, transparent)); color: var(--ink); font-weight: 600; }
+.seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* Energia: valor fixo */
+.fixa { display: flex; gap: 10px 14px; align-items: center; flex-wrap: wrap; border-top: 1px dashed var(--line); padding-top: 14px; }
+.fixa .chk { display: flex; gap: 8px; align-items: center; font-size: 14px; font-weight: 500; cursor: pointer; }
+.fixa input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--c-ene); cursor: pointer; margin: 0; }
+.fixa .inp { width: 150px; }
+.fixa .inp.modo { width: 170px; }
+.fixa.off .inp { opacity: .5; }
+.ene-calc.off { opacity: .45; }
+
+/* Extras opcionais */
+.opc { display: grid; gap: 8px; border-top: 1px dashed var(--line); padding-top: 14px; }
+.opc-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.opc ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.opc li {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) 130px auto; gap: 8px; align-items: center;
+}
+.opc li.off .inp { opacity: .55; }
+.opc input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--c-opc); cursor: pointer; margin: 0; }
+@media (max-width: 480px) {
+  .opc li { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .opc li .val { grid-column: 2 / 3; }
+}
+
+/* Etiqueta de orçamento */
+aside { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); min-width: 0; display: grid; gap: 16px; }
+@media (max-width: 860px) { aside { position: static; } }
+.ticket { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.ticket-top { padding: 18px 20px 14px; border-bottom: 1px dashed var(--line); display: grid; gap: 4px; }
+.eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+.price {
+  font-family: var(--font-display); font-weight: 800; font-size: 42px; line-height: 1.05;
+  color: var(--accent); font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
+}
+.sub { font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.bar { display: flex; height: 10px; border-radius: 3px; overflow: hidden; margin: 14px 20px 4px; background: var(--field); }
+.bar i { display: block; height: 100%; transition: width .25s ease; }
+.lines { list-style: none; margin: 0; padding: 10px 20px 6px; display: grid; }
+.lines li {
+  display: grid; grid-template-columns: 12px 1fr auto auto; gap: 10px; align-items: center;
+  padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 14px;
+}
+.lines li:last-child { border-bottom: 0; }
+.lines .sw { width: 10px; height: 10px; border-radius: 2px; }
+.lines .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
+.lines .p { font-family: var(--font-mono); font-size: 12px; color: var(--muted); width: 3.6em; text-align: right; font-variant-numeric: tabular-nums; }
+.totals { padding: 12px 20px 18px; border-top: 1px dashed var(--line); display: grid; gap: 6px; }
+.totals div { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.totals b { font-family: var(--font-mono); font-weight: 600; font-variant-numeric: tabular-nums; }
+.totals .strong { font-size: 15px; font-weight: 600; }
+.totals b.neg, .totals .neg b { color: var(--c-fal); }
+.preco-fixo { display: flex; gap: 8px 10px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+.preco-fixo .chk { display: flex; gap: 8px; align-items: center; font-size: 14px; font-weight: 500; cursor: pointer; }
+.preco-fixo input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer; margin: 0; }
+.preco-fixo .inp { flex: 1; min-width: 150px; }
+.preco-fixo.off .inp { opacity: .5; }
+#lucroBox.off { opacity: .45; }
+
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+button {
+  font-family: var(--font-body); font-size: 14px; font-weight: 600; cursor: pointer;
+  border-radius: 7px; padding: 9px 14px; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+}
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button.ghost { padding: 6px 10px; font-size: 13px; font-weight: 500; }
+button.x { padding: 6px 9px; font-size: 13px; font-weight: 500; color: var(--muted); }
+button:hover { filter: brightness(1.05); }
+button:focus-visible, select:focus-visible, input[type="checkbox"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.toast { font-size: 13px; color: var(--c-ext); min-height: 1.2em; }
+
+.saved { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 8px; }
+.saved h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; }
+.saved ul { list-style: none; margin: 0; padding: 0; display: grid; }
+.saved li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.saved li .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.saved li .n:hover { color: var(--accent); }
+.saved li b { font-family: var(--font-mono); font-weight: 500; font-variant-numeric: tabular-nums; }
+.saved li button { padding: 3px 8px; font-size: 12px; font-weight: 500; color: var(--muted); }
+.empty { font-size: 13px; color: var(--muted); margin: 0; }
+
+.note { font-size: 13px; color: var(--muted); max-width: 70ch; margin: 0; }
+
+/* Abas */
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tabs a {
+  font-family: var(--font-display); font-weight: 600; font-size: 14px; letter-spacing: 0.02em;
+  padding: 10px 14px; color: var(--muted); text-decoration: none; border-bottom: 3px solid transparent;
+  margin-bottom: -1px; white-space: nowrap;
+}
+.tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tabs a:hover { color: var(--ink); }
+.tabs a:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tabs .nuvem { margin-left: auto; align-self: center; font-size: 12px; color: var(--muted); white-space: nowrap; padding: 0 4px; }
+.tabs .nuvem.ok { color: var(--c-ext); }
+.tabs .nuvem.erro { color: var(--c-fal); }
+.tabs .cnt { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-left: 4px; }
+
+/* Cadastros */
+.cad { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 860px) { .cad { grid-template-columns: minmax(0, 1fr); } }
+.cad-lista { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: grid; gap: 10px; min-width: 0; }
+.cad-lista ul { list-style: none; margin: 0; padding: 0; display: grid; max-height: 60vh; overflow-y: auto; }
+.cad-lista li button {
+  width: 100%; text-align: left; border: 0; border-top: 1px solid var(--line); border-radius: 0;
+  padding: 9px 6px; background: transparent; display: grid; gap: 1px; font-weight: 500;
+}
+.cad-lista li:first-child button { border-top: 0; }
+.cad-lista li button small { font-family: var(--font-mono); font-size: 12px; color: var(--muted); font-weight: 400; }
+.cad-lista li button[aria-current="true"] { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.span2 { grid-column: span 2; }
+.full { grid-column: 1 / -1; }
+@media (max-width: 480px) { .span2 { grid-column: 1 / -1; } }
+.inp textarea {
+  flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink); resize: vertical;
+  font-family: var(--font-body); font-size: 14px; padding: 9px 10px; outline: none; min-height: 64px;
+}
+.f .erro { font-size: 12px; color: var(--c-fal); }
+.f .ok { font-size: 12px; color: var(--c-ext); }
+.cad-acoes { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+button.perigo { color: var(--c-fal); }
+button.perigo.confirmar { background: var(--c-fal); color: #fff; border-color: var(--c-fal); }
+.cli-resumo { font-size: 13px; color: var(--muted); margin: 0; white-space: pre-line; }
+/* Etiqueta de envio */
+.modal {
+  position: fixed; inset: 0; z-index: 50; overflow-y: auto;
+  background: color-mix(in srgb, #000 55%, transparent);
+  display: grid; justify-items: center; align-content: start;
+  padding: calc(env(safe-area-inset-top, 0px) + 20px) max(16px, env(safe-area-inset-right, 0px)) 32px max(16px, env(safe-area-inset-left, 0px));
+}
+.modal-card {
+  background: var(--panel); color: var(--ink); border-radius: var(--r); border: 1px solid var(--line);
+  width: 100%; max-width: 440px; padding: 16px; display: grid; gap: 12px; justify-items: center;
+}
+.modal-card h2 { margin: 0; font-family: var(--font-display); font-size: 18px; justify-self: start; }
+.etq-ctrl { display: grid; gap: 10px; width: 100%; }
+.etq-ctrl .actions { justify-content: flex-start; }
+.etq-falta { font-size: 13px; color: var(--c-fal); margin: 0; }
+.etq-falta button { margin-left: 6px; }
+.etq-wrap { width: 100%; display: grid; justify-items: center; overflow: hidden; }
+#etqPrint {
+  width: 100mm; height: 150mm; box-sizing: border-box; padding: 4mm;
+  background: #ffffff; color: #000000; font-family: Arial, Helvetica, sans-serif;
+  display: flex; flex-direction: column; gap: 3mm; box-shadow: 0 1px 6px rgba(0,0,0,.25);
+}
+@media screen and (max-width: 440px) { #etqPrint { zoom: .82; } }
+.etq-box { border: 0.45mm solid #000000; display: flex; flex-direction: column; }
+.etq-box.dest { flex: 1; }
+.etq-h { background: #000000; color: #ffffff; font-weight: 700; font-size: 9pt; letter-spacing: .06em; padding: 1.2mm 2.5mm; }
+.etq-body { padding: 2.5mm 3mm; display: flex; flex-direction: column; gap: 1.1mm; font-size: 10.5pt; line-height: 1.25; }
+.etq-nome { font-size: 13pt; font-weight: 700; text-transform: uppercase; }
+.etq-cep { font-size: 11pt; margin-top: 1mm; }
+.etq-cep b { font-size: 17pt; letter-spacing: .03em; margin-right: 2mm; }
+.etq-bar { margin-top: 1.5mm; }
+.etq-bar svg { display: block; height: 13mm; width: 52mm; }
+.etq-sm { font-size: 8.5pt; }
+.etq-box.rem .etq-body { font-size: 8.5pt; gap: .6mm; }
+.etq-box.rem .etq-nome { font-size: 10pt; }
+.etq-box.rem .etq-cep b { font-size: 10pt; }
+.etq-rodape { display: flex; justify-content: space-between; font-size: 8pt; border-top: .3mm dashed #000000; padding-top: 1.5mm; }
+@media print {
+  :root { padding: 0 !important; }
+  body { background: #ffffff !important; padding: 0 !important; }
+  body > .wrap { display: none !important; }
+  .modal { position: static; background: none; padding: 0; display: block; overflow: visible; }
+  .modal-card { border: 0; padding: 0; background: none; display: block; max-width: none; }
+  .modal-card > :not(.etq-wrap) { display: none !important; }
+  .etq-wrap { display: block; overflow: visible; }
+  #etqPrint { box-shadow: none; zoom: 1; }
+}
+/* Pedidos */
+#vEmpresa { display: grid; gap: 24px; }
+.pedidos { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px 18px; display: grid; gap: 14px; min-width: 0; }
+.pedidos h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; }
+.ped-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.kpi { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; background: var(--field); }
+.kpi span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+.kpi b { font-family: var(--font-mono); font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.kpi.receber b { color: var(--c-fal); }
+.filtros { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 10px; }
+@media (max-width: 600px) { .filtros { grid-template-columns: 1fr 1fr; } .filtros .busca { grid-column: 1 / -1; } }
+.tbl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 760px; }
+.tbl th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--line); background: var(--field); white-space: nowrap; }
+.tbl td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl .num, .tbl .money { font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tbl .money { text-align: right; }
+.tbl .neg { color: var(--c-fal); }
+.tbl small { display: block; color: var(--muted); font-size: 12px; }
+.tbl tr.cancelado td { opacity: .5; }
+.tbl tr.cancelado td.acoes { opacity: 1; }
+.st { font-family: var(--font-body); font-size: 13px; font-weight: 600; border-radius: 999px; padding: 4px 8px; border: 1px solid var(--line); background: var(--field); color: var(--ink); cursor: pointer; }
+.st[data-v="Novo"] { border-color: var(--c-opc); color: var(--c-opc); }
+.st[data-v="Em produção"] { border-color: var(--accent); color: var(--accent); }
+.st[data-v="Pronto"] { border-color: var(--c-ene); color: var(--c-ene); }
+.st[data-v="Enviado"], .st[data-v="Entregue"] { border-color: var(--c-ext); color: var(--c-ext); }
+.st[data-v="Cancelado"] { color: var(--muted); }
+.tbl input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--c-ext); cursor: pointer; }
+.tbl td.acoes { white-space: nowrap; }
+.tbl td.acoes button + button { margin-left: 4px; }
+.tbl .acoes button { padding: 4px 8px; font-size: 12px; font-weight: 500; }
+.cli-ped { list-style: none; margin: 0; padding: 0; display: grid; }
+.cli-ped li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.cli-ped li:first-child { border-top: 0; }
+.cli-ped .num, .cli-ped b { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 500; }
+.cli-ped .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cli-ped small { color: var(--muted); font-size: 12px; }
+/* Foto e link do produto */
+.foto-box { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.foto {
+  width: 96px; height: 96px; border-radius: 8px; border: 1.5px dashed var(--line); background: var(--field);
+  display: grid; place-items: center; overflow: hidden; flex: none; cursor: pointer;
+}
+.foto.drag { border-color: var(--accent); }
+.foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.foto span { font-size: 12px; color: var(--muted); text-align: center; padding: 6px; }
+.foto-acoes { display: grid; gap: 6px; justify-items: start; min-width: 0; flex: 1; }
+.foto-acoes .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.link-abrir { font-size: 13px; font-weight: 600; color: var(--accent); }
+.ped-prod { display: flex; gap: 10px; align-items: center; min-width: 0; }
+.ped-prod img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; flex: none; border: 1px solid var(--line); }
+.ped-prod a { font-size: 12px; color: var(--accent); font-weight: 600; }
+.cli-ped .n a { color: var(--accent); font-size: 12px; font-weight: 600; margin-left: 4px; }
+/* Despesas */
+.kpis.tres { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 480px) { .kpis.tres .kpi { padding: 8px; } .kpis.tres .kpi b { font-size: 13px; } .kpis.tres .kpi span { font-size: 10px; } }
+.kpi.saldo b.neg { color: var(--c-fal); }
+.kpi.saldo b.pos { color: var(--c-ext); }
+.filtros.dois { grid-template-columns: 1fr 1fr; }
+.lanc {
+  display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, .8fr) minmax(0, 1.1fr) minmax(0, 1.2fr) auto;
+  gap: 10px; align-items: end; padding: 12px; border-radius: 8px; background: var(--field); border: 1px solid var(--line);
+}
+.lanc .inp { background: var(--panel); }
+.lanc .tot { font-family: var(--font-mono); font-size: 13px; color: var(--muted); grid-column: 1 / -1; margin-top: -2px; }
+@media (max-width: 760px) { .lanc { grid-template-columns: 1fr 1fr; } .lanc .prod { grid-column: 1 / -1; } .lanc > button { grid-column: 1 / -1; } }
+details.cat { border: 1px solid var(--line); border-radius: 8px; }
+details.cat > summary { cursor: pointer; padding: 10px 12px; font-weight: 600; font-size: 14px; list-style-position: inside; }
+details.cat[open] > summary { border-bottom: 1px solid var(--line); }
+.cat-corpo { padding: 12px; display: grid; gap: 12px; }
+.cat-form { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.3fr) minmax(0, 1fr) auto auto; gap: 10px; align-items: end; }
+@media (max-width: 760px) { .cat-form { grid-template-columns: 1fr 1fr; } .cat-form .nomep { grid-column: 1 / -1; } }
+.cat-lista { list-style: none; margin: 0; padding: 0; display: grid; }
+.cat-lista li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 8px; align-items: center; padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.cat-lista li:first-child { border-top: 0; }
+.cat-lista b { font-family: var(--font-mono); font-weight: 500; font-variant-numeric: tabular-nums; }
+.cat-lista button { padding: 4px 8px; font-size: 12px; font-weight: 500; }
+.chip { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--field); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--accent); font-weight: 600; font-size: 13px; cursor: pointer; text-decoration: underline; }
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Custo de Impressão 3D</h1>
+    <p class="lede">Importe o arquivo fatiado do Bambu Studio ou digite o peso (g) e o tempo de impressão. A calculadora soma filamento, energia e os extras que você marcar, e aplica o seu lucro.</p>
+  </header>
+
+  <nav class="tabs" aria-label="Seções">
+    <a href="#orcamento" data-v="orcamento" aria-current="page">Orçamento</a>
+    <a href="#clientes" data-v="clientes">Clientes<span class="cnt" id="cntCli"></span></a>
+    <a href="#empresa" data-v="empresa">Minha empresa</a>
+    <span class="nuvem" id="nuvemChip" hidden></span>
+  </nav>
+
+  <section id="vOrcamento">
+  <div class="grid">
+    <form class="blocks" id="form" autocomplete="off">
+      <fieldset>
+        <legend>Cliente</legend>
+        <div class="row">
+          <div class="f full">
+            <label for="cliente">Para quem é o orçamento</label>
+            <div class="inp"><select id="cliente"><option value="">Sem cliente</option></select></div>
+            <p class="cli-resumo" id="cliResumo"></p>
+            <div><button type="button" class="linkbtn" id="btnNovoCliOrc">+ Cadastrar novo cliente</button></div>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Peça</legend>
+        <div class="importar" id="dropZone">
+          <div class="importar-top">
+            <button type="button" class="primary" id="btnImportar">Importar do fatiador</button>
+            <span class="hint">Arquivo <b>.gcode.3mf</b> (no Bambu Studio: File › Export › Export plate sliced file) ou <b>.gcode</b>. Também dá para arrastar o arquivo aqui.</span>
+            <input type="file" id="arquivo" accept=".3mf,.gcode,.gco,.bgcode" hidden>
+          </div>
+          <div id="placaBox" hidden>
+            <label class="sublabel" for="placa">Placa</label>
+            <div class="inp"><select id="placa"></select></div>
+          </div>
+          <p class="imp-status" id="impStatus" hidden></p>
+        </div>
+        <div class="row">
+          <div class="f" style="grid-column: 1 / -1">
+            <label for="nome">Nome da peça</label>
+            <div class="inp"><input id="nome" type="text" value="Suporte de headset (exemplo)"></div>
+          </div>
+          <div class="f full">
+            <span class="sublabel">Foto do produto</span>
+            <div class="foto-box">
+              <div class="foto" id="fotoPrev" role="button" tabindex="0" aria-label="Escolher foto do produto"><span>Sem foto</span></div>
+              <div class="foto-acoes">
+                <div class="btns">
+                  <button type="button" id="btnFoto">Escolher foto</button>
+                  <button type="button" class="perigo" id="btnFotoRem" hidden>Remover foto</button>
+                </div>
+                <span class="hint">JPG ou PNG. Também dá para arrastar a imagem até o quadro. A foto é reduzida para não ocupar espaço.</span>
+                <span class="toast" id="toastFoto" role="status"></span>
+              </div>
+            </div>
+            <input type="file" id="fotoArq" accept="image/*" hidden>
+            <input type="hidden" id="imgId">
+          </div>
+          <div class="f full">
+            <label for="link">Link do site</label>
+            <div class="inp"><input id="link" type="url" inputmode="url" placeholder="https://makerworld.com/... ou link da sua loja"></div>
+            <a class="link-abrir" id="linkAbrir" href="#" target="_blank" rel="noopener noreferrer" hidden>Abrir site ↗</a>
+          </div>
+          <div class="f">
+            <label for="peso">Peso do filamento</label>
+            <div class="inp"><input id="peso" type="number" min="0" step="0.1" value="85"><span>g</span></div>
+            <span class="hint">Inclua suportes e purga do AMS</span>
+          </div>
+          <div class="f tempo">
+            <label for="horas">Tempo de impressão</label>
+            <div class="time">
+              <div class="inp"><input id="horas" type="number" min="0" step="1" value="3"><span>h</span></div>
+              <div class="inp"><input id="minutos" type="number" min="0" max="59" step="1" value="20" aria-label="Minutos"><span>min</span></div>
+            </div>
+          </div>
+          <div class="f">
+            <label for="qtd">Peças nessa impressão</label>
+            <div class="inp"><input id="qtd" type="number" min="1" step="1" value="1"><span>un</span></div>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend><i class="dot" style="background:var(--c-fil)"></i>Filamento</legend>
+        <div class="row">
+          <div class="f">
+            <label for="precoKg">Preço do rolo (1 kg)</label>
+            <div class="inp"><span>R$</span><input id="precoKg" type="number" min="0" step="0.01" value="120"></div>
+            <span class="hint">Rolo de 500 g? Use o dobro do preço</span>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend><i class="dot" style="background:var(--c-ene)"></i>Energia</legend>
+        <div class="row ene-calc" id="eneCalc">
+          <div class="f">
+            <label for="impressora">Impressora</label>
+            <div class="inp">
+              <select id="impressora">
+                <option value="70">Bambu A1 mini</option>
+                <option value="95" selected>Bambu A1</option>
+                <option value="110">Bambu P1S / P1P</option>
+                <option value="120">Bambu X1 Carbon</option>
+                <option value="">Outra</option>
+              </select>
+            </div>
+          </div>
+          <div class="f">
+            <span class="sublabel" id="tensaoLbl">Tensão da tomada</span>
+            <div class="seg" role="radiogroup" aria-labelledby="tensaoLbl">
+              <label><input type="radio" name="tensao" id="t110" value="110" checked><span>110 V</span></label>
+              <label><input type="radio" name="tensao" id="t220" value="220"><span>220 V</span></label>
+            </div>
+          </div>
+          <div class="f">
+            <label for="watts">Consumo médio</label>
+            <div class="inp"><input id="watts" type="number" min="0" step="1" value="95"><span>W</span></div>
+          </div>
+          <div class="f">
+            <label for="kwh">Tarifa de energia</label>
+            <div class="inp"><span>R$</span><input id="kwh" type="number" min="0" step="0.01" value="0.95"><span>/kWh</span></div>
+            <span class="hint">Veja na sua conta de luz, com impostos</span>
+          </div>
+        </div>
+        <p class="hint" style="margin:0">O consumo em watts é praticamente o mesmo em 110 V e 220 V, e a conta de luz cobra por kWh. A tensão fica registrada no orçamento.</p>
+        <div class="fixa off" id="fixaBox">
+          <label class="chk" for="energiaFixa"><input type="checkbox" id="energiaFixa">Usar valor fixo de energia</label>
+          <div class="inp"><span>R$</span><input id="energiaFixaValor" type="number" min="0" step="0.1" value="1.00" aria-label="Valor fixo de energia"></div>
+          <div class="inp modo"><select id="energiaFixaModo" aria-label="Como cobrar o valor fixo"><option value="impressao">por impressão</option><option value="hora">por hora</option></select></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend><i class="dot" style="background:var(--c-opc)"></i>Extras</legend>
+        <div class="opc" style="border-top:0;padding-top:0">
+          <span class="hint">Ficam salvos. Marque a caixinha só quando a peça precisar.</span>
+          <ul id="opcLista"></ul>
+          <div><button type="button" class="ghost" id="btnAddExtra">+ Adicionar extra</button></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Lucro</legend>
+        <div class="row" id="lucroBox">
+          <div class="f">
+            <label for="lucro">Lucro desejado</label>
+            <div class="inp"><input id="lucro" type="number" min="0" step="5" value="60"><span>%</span></div>
+          </div>
+        </div>
+      </fieldset>
+
+      <p class="note">O consumo das impressoras é uma média aproximada para PLA. Com mesa mais quente (PETG, ABS) ou câmara fechada, o gasto sobe. Se tiver uma tomada medidora, use o valor real.</p>
+    </form>
+
+    <aside>
+      <div class="ticket" aria-live="polite">
+        <div class="ticket-top">
+          <span class="eyebrow" id="oRotulo">Preço de venda sugerido</span>
+          <span class="price" id="oPreco">R$ 0,00</span>
+          <span class="sub" id="oUnit"></span>
+          <div class="preco-fixo off" id="precoFixoBox">
+            <label class="chk" for="precoFixo"><input type="checkbox" id="precoFixo">Usar preço fixo</label>
+            <div class="inp"><span>R$</span><input id="precoFixoValor" type="number" min="0" step="0.5" value="25" aria-label="Preço fixo por peça"><span>/peça</span></div>
+          </div>
+        </div>
+        <div class="bar" id="bar" aria-hidden="true"></div>
+        <ul class="lines" id="lines"></ul>
+        <div class="totals">
+          <div class="strong"><span>Custo total</span><b id="oCusto">R$ 0,00</b></div>
+          <div id="lucroRow"><span id="oLucroRot">Lucro</span><b id="oLucro">R$ 0,00</b></div>
+          <div><span>Energia por hora</span><b id="oHora">R$ 0,00</b></div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="primary" id="btnSalvar">Salvar orçamento</button>
+        <button type="button" id="btnCopiar">Copiar resumo</button>
+        <button type="button" id="btnEtiqueta">Etiqueta de envio</button>
+        <button type="button" class="primary" id="btnPedido">Registrar pedido</button>
+      </div>
+      <div class="toast" id="toast" role="status"></div>
+
+      <div class="saved">
+        <h2>Orçamentos salvos</h2>
+        <ul id="lista"></ul>
+        <p class="empty" id="vazio">Nenhum ainda. Salve um orçamento para comparar depois. Fica guardado só neste navegador.</p>
+      </div>
+    </aside>
+  </div>
+  </section>
+
+  <section id="vClientes" hidden>
+    <div class="cad">
+      <div class="cad-lista">
+        <button type="button" class="primary" id="btnNovoCli">+ Novo cliente</button>
+        <div class="inp"><input id="buscaCli" type="search" placeholder="Buscar por nome, CPF/CNPJ ou cidade" aria-label="Buscar cliente"></div>
+        <ul id="listaCli"></ul>
+        <p class="empty" id="vazioCli">Nenhum cliente cadastrado ainda.</p>
+      </div>
+      <form class="blocks" id="formCli" autocomplete="off">
+        <fieldset>
+          <legend id="tituloCli">Novo cliente</legend>
+          <div class="row">
+          <div class="f span2">
+            <label for="c_nome">Nome completo ou razão social</label>
+            <div class="inp"><input id="c_nome" type="text"></div>
+          </div>
+          <div class="f">
+            <label for="c_doc">CPF ou CNPJ</label>
+            <div class="inp"><input id="c_doc" type="text" maxlength="18"></div>
+            <span class="hint" id="c_docInfo"></span>
+          </div>
+          <div class="f">
+            <label for="c_tel">Telefone / WhatsApp</label>
+            <div class="inp"><input id="c_tel" type="tel" maxlength="16" placeholder="(00) 00000-0000"></div>
+          </div>
+          <div class="f span2">
+            <label for="c_email">E-mail</label>
+            <div class="inp"><input id="c_email" type="email"></div>
+          </div>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Endereço de entrega</legend>
+          <div class="row">
+          <div class="f">
+            <label for="c_cep">CEP</label>
+            <div class="inp"><input id="c_cep" type="text" inputmode="numeric" maxlength="9" placeholder="00000-000"></div>
+            <span class="hint" id="c_cepInfo"></span>
+          </div>
+          <div class="f span2">
+            <label for="c_rua">Rua / logradouro</label>
+            <div class="inp"><input id="c_rua" type="text"></div>
+          </div>
+          <div class="f">
+            <label for="c_numero">Número</label>
+            <div class="inp"><input id="c_numero" type="text"></div>
+          </div>
+          <div class="f">
+            <label for="c_compl">Complemento</label>
+            <div class="inp"><input id="c_compl" type="text" placeholder="Apto, bloco, sala"></div>
+          </div>
+          <div class="f">
+            <label for="c_bairro">Bairro</label>
+            <div class="inp"><input id="c_bairro" type="text"></div>
+          </div>
+          <div class="f">
+            <label for="c_cidade">Cidade</label>
+            <div class="inp"><input id="c_cidade" type="text"></div>
+          </div>
+          <div class="f">
+            <label for="c_uf">UF</label>
+            <div class="inp"><input id="c_uf" type="text" maxlength="2" placeholder="SP"></div>
+          </div>
+            <div class="f full">
+              <label for="c_obs">Observações</label>
+              <div class="inp"><textarea id="c_obs" placeholder="Ponto de referência, preferência de envio, cores favoritas…"></textarea></div>
+            </div>
+            <div class="f full">
+              <div><button type="button" id="btnEtqCli">Gerar etiqueta de envio</button></div>
+              <span class="hint">Etiqueta no padrão dos Correios, com remetente (sua empresa) e destinatário (este cliente).</span>
+            </div>
+          </div>
+        </fieldset>
+        <fieldset id="cliPedBox" hidden>
+          <legend>Pedidos deste cliente</legend>
+          <p class="hint" id="cliPedResumo" style="margin:0"></p>
+          <ul class="cli-ped" id="cliPedLista"></ul>
+        </fieldset>
+        <div class="cad-acoes">
+          <button type="submit" class="primary" id="btnSalvarCli">Salvar cliente</button>
+          <button type="button" id="btnOrcCli">Fazer orçamento para este cliente</button>
+          <button type="button" class="perigo" id="btnExcluirCli" hidden>Excluir</button>
+          <span class="toast" id="toastCli" role="status"></span>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section id="vEmpresa" hidden>
+    <div class="pedidos" id="pedidos">
+      <div class="ped-top">
+        <h2>Pedidos da empresa</h2>
+        <button type="button" id="btnCopiarPed">Copiar lista para planilha</button>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><span>Pedidos</span><b id="kQtd">0</b></div>
+        <div class="kpi"><span>Faturamento</span><b id="kFat">R$ 0,00</b></div>
+        <div class="kpi"><span>Lucro</span><b id="kLuc">R$ 0,00</b></div>
+        <div class="kpi receber"><span>A receber</span><b id="kRec">R$ 0,00</b></div>
+      </div>
+      <div class="filtros">
+        <div class="inp"><select id="fStatus" aria-label="Filtrar por status"><option value="">Todos os status</option><option value="abertos">Em aberto (não entregues)</option></select></div>
+        <div class="inp"><select id="fMes" aria-label="Filtrar por mês"><option value="">Todos os meses</option></select></div>
+        <div class="inp busca"><input id="fBusca" type="search" placeholder="Buscar por cliente, peça ou número" aria-label="Buscar pedido"></div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th>Nº</th><th>Data</th><th>Cliente</th><th>Peça</th><th style="text-align:right">Valor</th><th style="text-align:right">Lucro</th><th>Status</th><th>Pago</th><th></th></tr></thead>
+          <tbody id="pedBody"></tbody>
+        </table>
+      </div>
+      <p class="empty" id="pedVazio">Nenhum pedido ainda. No Orçamento, escolha o cliente, calcule e clique em <b>Registrar pedido</b>.</p>
+      <span class="toast" id="toastPed" role="status"></span>
+    </div>
+
+    <div class="pedidos" id="despesas">
+      <div class="ped-top">
+        <h2>Despesas</h2>
+        <button type="button" id="btnCopiarDesp">Copiar lista para planilha</button>
+      </div>
+      <div class="kpis tres">
+        <div class="kpi"><span>Despesas</span><b id="dTot">R$ 0,00</b></div>
+        <div class="kpi"><span>Faturamento</span><b id="dFat">R$ 0,00</b></div>
+        <div class="kpi saldo"><span>Faturamento − despesas</span><b id="dSaldo">R$ 0,00</b></div>
+      </div>
+      <div class="filtros dois">
+        <div class="inp"><select id="fMesD" aria-label="Filtrar despesas por mês"></select></div>
+        <div class="inp"><select id="fCatD" aria-label="Filtrar por categoria"><option value="">Todas as categorias</option></select></div>
+      </div>
+
+      <div class="lanc">
+        <div class="f prod">
+          <label for="dProd">O que você comprou</label>
+          <div class="inp"><select id="dProd"></select></div>
+        </div>
+        <div class="f">
+          <label for="dQtd">Quantidade</label>
+          <div class="inp"><input id="dQtd" type="number" min="0" step="1" value="1"></div>
+        </div>
+        <div class="f">
+          <label for="dUnit">Valor unitário</label>
+          <div class="inp"><span>R$</span><input id="dUnit" type="number" min="0" step="0.01"></div>
+        </div>
+        <div class="f">
+          <label for="dData">Data</label>
+          <div class="inp"><input id="dData" type="date"></div>
+        </div>
+        <button type="button" class="primary" id="btnLancar">Lançar despesa</button>
+        <span class="tot" id="dPrev"></span>
+      </div>
+
+      <details class="cat" id="catDesp">
+        <summary>Produtos de despesa <span class="cnt" id="cntProd"></span></summary>
+        <div class="cat-corpo">
+          <p class="hint" style="margin:0">Cadastre aqui o que você costuma comprar. Depois é só selecionar na hora de lançar a despesa.</p>
+          <div class="cat-form">
+            <div class="f nomep">
+              <label for="pNome">Nome do produto</label>
+              <div class="inp"><input id="pNome" type="text" placeholder="Ex.: Filamento PLA preto 1 kg"></div>
+            </div>
+            <div class="f">
+              <label for="pCat">Categoria</label>
+              <div class="inp"><select id="pCat"></select></div>
+            </div>
+            <div class="f">
+              <label for="pPreco">Preço</label>
+              <div class="inp"><span>R$</span><input id="pPreco" type="number" min="0" step="0.01"></div>
+            </div>
+            <button type="button" class="primary" id="btnSalvarProd">Adicionar</button>
+            <button type="button" id="btnCancelarProd" hidden>Cancelar</button>
+          </div>
+          <ul class="cat-lista" id="listaProd"></ul>
+          <p class="empty" id="vazioProd">Nenhum produto cadastrado ainda.</p>
+        </div>
+      </details>
+
+      <div class="tbl-wrap" id="despWrap">
+        <table class="tbl" style="min-width: 640px">
+          <thead><tr><th>Data</th><th>Produto</th><th>Categoria</th><th style="text-align:right">Qtd</th><th style="text-align:right">Unitário</th><th style="text-align:right">Total</th><th></th></tr></thead>
+          <tbody id="despBody"></tbody>
+        </table>
+      </div>
+      <p class="empty" id="despVazio">Nenhuma despesa lançada neste período.</p>
+      <span class="toast" id="toastDesp" role="status"></span>
+    </div>
+
+    <form class="blocks" id="formEmp" autocomplete="off" style="max-width: 820px">
+      <fieldset>
+        <legend>Dados da empresa</legend>
+        <div class="row">
+          <div class="f span2">
+            <label for="e_nome">Nome da empresa</label>
+            <div class="inp"><input id="e_nome" type="text"></div>
+          </div>
+          <div class="f">
+            <label for="e_doc">CPF ou CNPJ</label>
+            <div class="inp"><input id="e_doc" type="text" maxlength="18"></div>
+            <span class="hint" id="e_docInfo"></span>
+          </div>
+          <div class="f">
+            <label for="e_tel">Telefone / WhatsApp</label>
+            <div class="inp"><input id="e_tel" type="tel" maxlength="16" placeholder="(00) 00000-0000"></div>
+          </div>
+          <div class="f span2">
+            <label for="e_email">E-mail</label>
+            <div class="inp"><input id="e_email" type="email"></div>
+          </div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Endereço (remetente dos envios)</legend>
+        <div class="row">
+          <div class="f">
+            <label for="e_cep">CEP</label>
+            <div class="inp"><input id="e_cep" type="text" inputmode="numeric" maxlength="9" placeholder="00000-000"></div>
+            <span class="hint" id="e_cepInfo"></span>
+          </div>
+          <div class="f span2">
+            <label for="e_rua">Rua / logradouro</label>
+            <div class="inp"><input id="e_rua" type="text"></div>
+          </div>
+          <div class="f">
+            <label for="e_numero">Número</label>
+            <div class="inp"><input id="e_numero" type="text"></div>
+          </div>
+          <div class="f">
+            <label for="e_compl">Complemento</label>
+            <div class="inp"><input id="e_compl" type="text" placeholder="Apto, bloco, sala"></div>
+          </div>
+          <div class="f">
+            <label for="e_bairro">Bairro</label>
+            <div class="inp"><input id="e_bairro" type="text"></div>
+          </div>
+          <div class="f">
+            <label for="e_cidade">Cidade</label>
+            <div class="inp"><input id="e_cidade" type="text"></div>
+          </div>
+          <div class="f">
+            <label for="e_uf">UF</label>
+            <div class="inp"><input id="e_uf" type="text" maxlength="2" placeholder="SP"></div>
+          </div>
+        </div>
+      </fieldset>
+      <div class="cad-acoes">
+        <button type="submit" class="primary">Salvar dados da empresa</button>
+        <span class="toast" id="toastEmp" role="status"></span>
+      </div>
+      <fieldset>
+        <legend>Nuvem (Supabase)</legend>
+        <p class="note">Conecte ao seu projeto do Supabase para guardar tudo na nuvem: cadastros, orçamentos, pedidos, despesas e fotos. Assim o PC e o celular usam os mesmos dados. Sem internet, a calculadora continua funcionando e envia as alterações quando a conexão voltar.</p>
+        <div class="row">
+          <div class="f span2">
+            <label for="sbUrl">URL do projeto</label>
+            <div class="inp"><input id="sbUrl" type="url" placeholder="https://xxxxxxxx.supabase.co" autocomplete="off"></div>
+          </div>
+          <div class="f span2">
+            <label for="sbChave">Chave pública (anon / publishable)</label>
+            <div class="inp"><input id="sbChave" type="text" placeholder="eyJ... ou sb_publishable_..." autocomplete="off"></div>
+          </div>
+          <div class="f span2">
+            <label for="sbEmail">E-mail</label>
+            <div class="inp"><input id="sbEmail" type="email" autocomplete="username"></div>
+          </div>
+          <div class="f span2">
+            <label for="sbSenha">Senha</label>
+            <div class="inp"><input id="sbSenha" type="password" autocomplete="current-password"></div>
+          </div>
+        </div>
+        <div class="cad-acoes">
+          <button type="button" class="primary" id="btnSbEntrar">Conectar</button>
+          <button type="button" id="btnSbSinc">Sincronizar agora</button>
+          <button type="button" id="btnSbSair">Desconectar</button>
+          <span class="toast" id="toastSb" role="status"></span>
+        </div>
+        <p class="note" id="sbStatus"></p>
+      </fieldset>
+      <fieldset>
+        <legend>Backup dos dados</legend>
+        <p class="note">Os cadastros, orçamentos e configurações ficam guardados só neste navegador ou aparelho. Para passar do PC para o celular, ou para não perder nada, copie o backup e guarde o texto (num bloco de notas ou mandando para você mesmo no WhatsApp). Para restaurar, cole o texto no campo abaixo.</p>
+        <div class="cad-acoes"><button type="button" id="btnBackup">Copiar backup</button></div>
+        <div class="f">
+          <label for="txtBackup">Restaurar backup</label>
+          <div class="inp"><textarea id="txtBackup" placeholder="Cole aqui o texto do backup"></textarea></div>
+        </div>
+        <div class="cad-acoes">
+          <button type="button" id="btnRestaurar">Restaurar</button>
+          <span class="toast" id="toastBkp" role="status"></span>
+        </div>
+      </fieldset>
+    </form>
+  </section>
+</div>
+
+<div class="modal" id="etqModal" hidden role="dialog" aria-modal="true" aria-labelledby="etqTitulo">
+  <div class="modal-card">
+    <h2 id="etqTitulo">Etiqueta de envio</h2>
+    <div class="etq-ctrl">
+      <p class="etq-falta" id="etqFalta" hidden></p>
+      <div class="f">
+        <label for="etqTam">Tamanho do papel</label>
+        <div class="inp"><select id="etqTam"><option value="termica">10 × 15 cm (impressora térmica)</option><option value="a4">Folha A4 (etiqueta no canto)</option></select></div>
+      </div>
+      <div class="actions">
+        <button type="button" class="primary" id="etqImprimir">Imprimir</button>
+        <button type="button" id="etqCopiar">Copiar texto</button>
+        <button type="button" id="etqFechar">Fechar</button>
+      </div>
+      <p class="hint" id="etqSemImpressao" hidden style="margin:0">Para imprimir, abra o Custo 3D instalado no PC ou o app do celular. Por aqui dá para copiar o texto.</p>
+      <span class="toast" id="toastEtq" role="status"></span>
+    </div>
+    <div class="etq-wrap"><div id="etqPrint"></div></div>
+  </div>
+</div>
+<style id="etqPage">@page { size: 100mm 150mm; margin: 0; }</style>
+
+<script>
+window.iniciarCusto3D = function () {
+  const $ = (id) => document.getElementById(id);
+  const ids = ["nome","peso","horas","minutos","qtd","precoKg","impressora","watts","kwh","lucro","energiaFixaValor","energiaFixaModo","precoFixoValor","cliente","imgId","link"];
+  const KEY = "calc3d-config-v2";
+  const LKEY = "calc3d-salvos-v1";
+  const EKEY = "calc3d-extras-v1";
+  const brl = (v) => (isFinite(v) ? v : 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const toNum = (s) => { const v = parseFloat(String(s).replace(",", ".")); return isFinite(v) && v > 0 ? v : 0; };
+  const num = (id) => toNum($(id).value);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  function load(key, fallback) { try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch (e) { return fallback; } }
+  function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
+
+  let extras = load(EKEY, [
+    { on: false, nome: "Pintura (exemplo)", valor: "15" },
+    { on: false, nome: "Ímãs ou parafusos (exemplo)", valor: "3" },
+  ]);
+
+  const tensao = () => (document.querySelector('input[name="tensao"]:checked') || {}).value || "110";
+  const setTensao = (v) => { const el = v === "220" ? $("t220") : $("t110"); el.checked = true; };
+
+  function renderExtras() {
+    $("opcLista").innerHTML = extras.map((x, i) => `
+      <li class="${x.on ? "" : "off"}" data-i="${i}">
+        <input type="checkbox" id="opcOn${i}" data-k="on" ${x.on ? "checked" : ""} aria-label="Usar este extra">
+        <div class="inp"><input type="text" id="opcNome${i}" data-k="nome" value="${esc(x.nome)}" placeholder="Nome do extra" aria-label="Nome do extra"></div>
+        <div class="inp val"><span>R$</span><input type="number" id="opcValor${i}" data-k="valor" min="0" step="0.5" value="${esc(x.valor)}" aria-label="Valor do extra"></div>
+        <button type="button" class="x" data-rm="${i}" aria-label="Remover extra">✕</button>
+      </li>`).join("");
+  }
+
+  function calcular() {
+    const horas = num("horas") + Math.min(num("minutos"), 59) / 60;
+    const qtd = Math.max(1, Math.round(num("qtd")) || 1);
+    const filamento = num("peso") / 1000 * num("precoKg");
+    const fixa = $("energiaFixa").checked;
+    const energia = fixa
+      ? ($("energiaFixaModo").value === "hora" ? num("energiaFixaValor") * horas : num("energiaFixaValor"))
+      : num("watts") / 1000 * horas * num("kwh");
+    $("eneCalc").classList.toggle("off", fixa);
+    $("fixaBox").classList.toggle("off", !fixa);
+    const ativos = extras.filter((x) => x.on && toNum(x.valor) > 0);
+    const opcionais = ativos.reduce((s, x) => s + toNum(x.valor), 0);
+    const custo = filamento + energia + opcionais;
+    const fixo = $("precoFixo").checked;
+    const preco = fixo ? num("precoFixoValor") * qtd : custo * (1 + num("lucro") / 100);
+    return { horas, qtd, filamento, energia, opcionais, ativos, custo, lucro: preco - custo, preco, fixo };
+  }
+
+  function render() {
+    const r = calcular();
+    const partes = [
+      ["Filamento", r.filamento, "--c-fil"],
+      ["Energia", r.energia, "--c-ene"],
+      ["Extras", r.opcionais, "--c-opc"],
+    ].filter(([n, v]) => n !== "Extras" || v > 0);
+    const tot = r.custo || 1;
+    $("bar").innerHTML = partes.map(([, v, c]) => `<i style="width:${(v / tot * 100).toFixed(2)}%;background:var(${c})"></i>`).join("");
+    $("lines").innerHTML = partes.map(([n, v, c]) =>
+      `<li><i class="sw" style="background:var(${c})"></i><span>${n}</span><span class="v">${brl(v)}</span><span class="p">${r.custo ? Math.round(v / tot * 100) : 0}%</span></li>`
+    ).join("");
+    $("oPreco").textContent = brl(r.preco);
+    const h = r.horas.toFixed(2).replace(".", ",");
+    $("oUnit").textContent = r.qtd > 1 ? `${brl(r.preco / r.qtd)} por peça · ${r.qtd} peças` : `${h} h de impressão · ${tensao()} V`;
+    $("oCusto").textContent = brl(r.custo);
+    $("oLucro").textContent = brl(r.lucro);
+    const margem = r.custo > 0 ? Math.round(r.lucro / r.custo * 100) : 0;
+    $("oRotulo").textContent = r.fixo ? "Preço de venda fixo" : "Preço de venda sugerido";
+    $("oLucroRot").textContent = r.lucro < 0 ? `Prejuízo (${margem}%)` : `Lucro (${margem}%)`;
+    $("lucroRow").classList.toggle("neg", r.lucro < 0);
+    $("precoFixoBox").classList.toggle("off", !r.fixo);
+    $("lucroBox").classList.toggle("off", r.fixo);
+    $("oHora").textContent = r.horas > 0 ? brl(r.energia / r.horas) : brl(0);
+    const cfg = { tensao: tensao(), energiaFixa: $("energiaFixa").checked, precoFixo: $("precoFixo").checked }; ids.forEach((id) => (cfg[id] = $(id).value)); save(KEY, cfg);
+    save(EKEY, extras);
+    return r;
+  }
+
+  function copiar(txt, ok, onde) {
+    const avisar = onde || aviso;
+    if (window.Android && window.Android.copiar) { window.Android.copiar(txt); avisar(ok); return; }
+    const falhou = () => avisar("Não deu para copiar automaticamente");
+    try { navigator.clipboard.writeText(txt).then(() => avisar(ok), falhou); } catch (e) { falhou(); }
+  }
+
+  function aviso(msg) { $("toast").textContent = msg; clearTimeout(aviso.t); aviso.t = setTimeout(() => ($("toast").textContent = ""), 2500); }
+
+  function renderLista() {
+    const l = load(LKEY, []);
+    $("vazio").hidden = l.length > 0;
+    $("lista").innerHTML = l.map((o, i) =>
+      `<li><span class="n" data-i="${i}" title="Carregar">${esc(o.nome)}</span><b>${brl(o.preco)}</b><button type="button" data-del="${i}" aria-label="Remover">Remover</button></li>`
+    ).join("");
+  }
+
+  function aplicarCfg(cfg) {
+    Object.entries(cfg).forEach(([k, v]) => { if (k !== "tensao" && k !== "energiaFixa" && k !== "precoFixo" && $(k) && v !== undefined) $(k).value = v; });
+    if (cfg.tensao) setTensao(cfg.tensao);
+    $("energiaFixa").checked = !!cfg.energiaFixa;
+    $("precoFixo").checked = !!cfg.precoFixo;
+    if (!("imgId" in cfg)) $("imgId").value = "";
+    if (!("link" in cfg)) $("link").value = "";
+    mostrarFoto(); atualizarLink();
+  }
+
+  // eventos do formulário
+  $("form").addEventListener("input", (e) => {
+    const li = e.target.closest("#opcLista li");
+    if (li) {
+      const i = +li.dataset.i, k = e.target.dataset.k;
+      extras[i][k] = k === "on" ? e.target.checked : e.target.value;
+      if (k === "on") li.classList.toggle("off", !e.target.checked);
+    } else if (e.target.id === "watts") {
+      $("impressora").value = [...$("impressora").options].some((o) => o.value === $("watts").value) ? $("watts").value : "";
+    }
+    render();
+  });
+  $("form").addEventListener("change", (e) => { if (e.target.name === "tensao" || e.target.id === "energiaFixa" || e.target.id === "energiaFixaModo") render(); });
+  $("impressora").addEventListener("change", () => { if ($("impressora").value) $("watts").value = $("impressora").value; render(); });
+  $("form").addEventListener("submit", (e) => e.preventDefault());
+  $("precoFixo").addEventListener("change", render);
+  $("precoFixoValor").addEventListener("input", () => { if (!$("precoFixo").checked) $("precoFixo").checked = true; render(); });
+
+  $("opcLista").addEventListener("click", (e) => {
+    const rm = e.target.getAttribute("data-rm");
+    if (rm !== null) { extras.splice(+rm, 1); renderExtras(); render(); aviso("Extra removido"); }
+  });
+  $("btnAddExtra").addEventListener("click", () => {
+    extras.push({ on: true, nome: "", valor: "" });
+    renderExtras(); render();
+    const n = $("opcNome" + (extras.length - 1)); if (n) n.focus();
+  });
+
+  $("btnSalvar").addEventListener("click", () => {
+    const r = render();
+    const cfg = { tensao: tensao(), energiaFixa: $("energiaFixa").checked, precoFixo: $("precoFixo").checked }; ids.forEach((id) => (cfg[id] = $(id).value));
+    const l = load(LKEY, []);
+    const cliS = clienteAtual();
+    l.unshift({ nome: ($("nome").value.trim() || "Sem nome") + (cliS ? " · " + cliS.nome : ""), preco: r.preco, cfg, extras: JSON.parse(JSON.stringify(extras)) });
+    save(LKEY, l.slice(0, 30));
+    renderLista();
+    aviso("Orçamento salvo");
+  });
+
+  $("lista").addEventListener("click", (e) => {
+    const l = load(LKEY, []);
+    const del = e.target.getAttribute("data-del");
+    const i = e.target.getAttribute("data-i");
+    if (del !== null) { l.splice(+del, 1); save(LKEY, l); renderLista(); limparImagens(); aviso("Removido"); }
+    else if (i !== null && l[+i]) {
+      aplicarCfg(l[+i].cfg);
+      resumoCli();
+      if (Array.isArray(l[+i].extras)) { extras = l[+i].extras; renderExtras(); }
+      render(); aviso("Orçamento carregado");
+    }
+  });
+
+  $("btnCopiar").addEventListener("click", () => {
+    const r = calcular();
+    const cli = clienteAtual();
+    const txt = [
+      ...(cli ? [`Cliente: ${cli.nome}`] : []),
+      `${$("nome").value || "Peça"}`,
+      ...(linkUrl() ? [`Link: ${linkUrl()}`] : []),
+      `${num("peso")} g · ${r.horas.toFixed(2).replace(".", ",")} h · ${tensao()} V`,
+      `Filamento: ${brl(r.filamento)}`,
+      `Energia: ${brl(r.energia)}`,
+      ...r.ativos.map((x) => `${x.nome || "Extra"}: ${brl(toNum(x.valor))}`),
+      `Custo total: ${brl(r.custo)}`,
+      `${r.fixo ? "Preço de venda" : "Preço sugerido"}: ${brl(r.preco)}${r.qtd > 1 ? ` (${brl(r.preco / r.qtd)} por peça)` : ""}`,
+    ].join("\n");
+    copiar(txt, "Resumo copiado");
+  });
+
+  // ---------- Cadastros: empresa e clientes ----------
+  const CKEY = "calc3d-clientes-v1", EMKEY = "calc3d-empresa-v1";
+  const CAMPOS = ["nome","doc","tel","email","cep","rua","numero","compl","bairro","cidade","uf"];
+  let clientes = load(CKEY, []);
+  let editCli = null;
+
+  const soAlnum = (v) => String(v || "").toUpperCase().replace(/[^0-9A-Z]/g, "");
+  const soDig = (v) => String(v || "").replace(/\D/g, "");
+
+  function fmtDoc(v) {
+    const d = soAlnum(v);
+    if (d.length <= 11 && /^\d*$/.test(d)) {
+      return d.replace(/^(\d{3})(\d)/, "$1.$2").replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3").replace(/\.(\d{3})(\d{1,2})$/, ".$1-$2");
+    }
+    const x = d.slice(0, 14);
+    return x.replace(/^(\w{2})(\w)/, "$1.$2").replace(/^(\w{2})\.(\w{3})(\w)/, "$1.$2.$3")
+      .replace(/^(\w{2})\.(\w{3})\.(\w{3})(\w)/, "$1.$2.$3/$4").replace(/\/(\w{4})(\w{1,2})$/, "/$1-$2");
+  }
+  function fmtCep(v) { const d = soDig(v).slice(0, 8); return d.length > 5 ? d.slice(0, 5) + "-" + d.slice(5) : d; }
+  function fmtTel(v) {
+    const d = soDig(v).slice(0, 11);
+    if (d.length <= 2) return d ? "(" + d : "";
+    if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+    if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+    return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  }
+  function cpfValido(d) {
+    if (!/^\d{11}$/.test(d) || /^(\d)\1{10}$/.test(d)) return false;
+    for (let t = 9; t < 11; t++) {
+      let s = 0; for (let i = 0; i < t; i++) s += +d[i] * (t + 1 - i);
+      if (((s * 10) % 11) % 10 !== +d[t]) return false;
+    }
+    return true;
+  }
+  function cnpjValido(c) {   // aceita o CNPJ numérico e o novo alfanumérico
+    if (!/^[0-9A-Z]{12}\d{2}$/.test(c) || /^(\w)\1{13}$/.test(c)) return false;
+    const val = (ch) => ch.charCodeAt(0) - 48;
+    const dv = (n) => {
+      let s = 0, p = n - 7;
+      for (let i = 0; i < n; i++) { s += val(c[i]) * p; p = p === 2 ? 9 : p - 1; }
+      const r = s % 11; return r < 2 ? 0 : 11 - r;
+    };
+    return dv(12) === +c[12] && dv(13) === +c[13];
+  }
+  function checarDoc(v) {
+    const d = soAlnum(v);
+    if (!d) return { ok: true, msg: "" };
+    if (d.length === 11 && /^\d+$/.test(d)) return cpfValido(d) ? { ok: true, msg: "CPF válido" } : { ok: false, msg: "CPF inválido. Confira os números." };
+    if (d.length === 14) return cnpjValido(d) ? { ok: true, msg: "CNPJ válido" } : { ok: false, msg: "CNPJ inválido. Confira os números." };
+    return { ok: false, msg: "Digite 11 dígitos para CPF ou 14 para CNPJ." };
+  }
+  function mostrarDoc(px) {
+    const r = checarDoc($(px + "doc").value), el = $(px + "docInfo");
+    el.textContent = r.msg; el.className = r.msg ? (r.ok ? "ok" : "erro") : "hint";
+    return r.ok;
+  }
+
+  function ligarMascaras(px) {
+    $(px + "doc").addEventListener("input", (e) => { e.target.value = fmtDoc(e.target.value); mostrarDoc(px); });
+    $(px + "tel").addEventListener("input", (e) => { e.target.value = fmtTel(e.target.value); });
+    $(px + "uf").addEventListener("input", (e) => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, ""); });
+    $(px + "cep").addEventListener("input", async (e) => {
+      e.target.value = fmtCep(e.target.value);
+      const cep = soDig(e.target.value), info = $(px + "cepInfo");
+      info.textContent = "";
+      if (cep.length !== 8) return;
+      try {   // preenche o endereço pelo ViaCEP quando há internet
+        const ctrl = new AbortController(); setTimeout(() => ctrl.abort(), 5000);
+        const r = await (await fetch(`https://viacep.com.br/ws/${cep}/json/`, { signal: ctrl.signal })).json();
+        if (r.erro) { info.textContent = "CEP não encontrado"; return; }
+        $(px + "rua").value = r.logradouro || $(px + "rua").value;
+        $(px + "bairro").value = r.bairro || $(px + "bairro").value;
+        $(px + "cidade").value = r.localidade || $(px + "cidade").value;
+        $(px + "uf").value = r.uf || $(px + "uf").value;
+        info.textContent = "Endereço preenchido pelo CEP";
+        $(px + "numero").focus();
+      } catch (err) { /* sem internet: preencha à mão */ }
+    });
+  }
+
+  function lerForm(px) { const o = {}; CAMPOS.forEach((k) => (o[k] = $(px + k).value.trim())); return o; }
+  function preencherForm(px, o) { CAMPOS.forEach((k) => ($(px + k).value = (o && o[k]) || "")); }
+
+  function linhasEndereco(o) {
+    const l1 = [o.rua, o.numero].filter(Boolean).join(", ") + (o.compl ? " - " + o.compl : "");
+    const l2 = [o.bairro, [o.cidade, o.uf].filter(Boolean).join("/")].filter(Boolean).join(" - ");
+    return [l1, l2, o.cep ? "CEP: " + o.cep : ""].filter(Boolean);
+  }
+  function blocoEnvio(titulo, o) {
+    return [titulo, o.nome, o.doc ? (soAlnum(o.doc).length === 14 ? "CNPJ: " : "CPF: ") + o.doc : "", ...linhasEndereco(o), o.tel ? "Tel: " + o.tel : ""].filter(Boolean).join("\n");
+  }
+
+  // Empresa
+  function carregarEmpresa() { preencherForm("e_", load(EMKEY, { nome: "JR PRINTER 3D" })); mostrarDoc("e_"); }
+  $("formEmp").addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!mostrarDoc("e_")) { avisoEm("toastEmp", "Corrija o CPF/CNPJ antes de salvar"); return; }
+    save(EMKEY, lerForm("e_")); avisoEm("toastEmp", "Dados da empresa salvos");
+  });
+
+  function avisoEm(id, msg) { const el = $(id); el.textContent = msg; clearTimeout(el._t); el._t = setTimeout(() => (el.textContent = ""), 2800); }
+
+  // Clientes
+  function salvarClientes() { save(CKEY, clientes); renderSelectCli(); renderListaCli(); }
+  function renderListaCli() {
+    const q = $("buscaCli").value.trim().toLowerCase();
+    const qd = soAlnum(q);
+    const vis = clientes.filter((c) => !q || c.nome.toLowerCase().includes(q) || (c.cidade || "").toLowerCase().includes(q) || (qd && soAlnum(c.doc).includes(qd)));
+    $("listaCli").innerHTML = vis.map((c) =>
+      `<li><button type="button" data-id="${c.id}" ${c.id === editCli ? 'aria-current="true"' : ""}>${esc(c.nome)}<small>${esc([c.doc, [c.cidade, c.uf].filter(Boolean).join("/")].filter(Boolean).join(" · ") || "sem documento")}</small></button></li>`
+    ).join("");
+    $("vazioCli").hidden = clientes.length > 0;
+    $("vazioCli").textContent = clientes.length ? "" : "Nenhum cliente cadastrado ainda.";
+    $("cntCli").textContent = clientes.length ? clientes.length : "";
+  }
+  function renderSelectCli() {
+    const sel = $("cliente"), atual = sel.value;
+    const ord = [...clientes].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+    sel.innerHTML = `<option value="">Sem cliente</option>` + ord.map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join("");
+    sel.value = clientes.some((c) => c.id === atual) ? atual : "";
+    resumoCli();
+  }
+  function clienteAtual() { return clientes.find((c) => c.id === $("cliente").value) || null; }
+  function resumoCli() {
+    const c = clienteAtual();
+    $("cliResumo").textContent = c ? [c.doc, ...linhasEndereco(c), c.tel].filter(Boolean).join("\n") : "";
+  }
+  function editarCliente(id) {
+    editCli = id;
+    const c = clientes.find((x) => x.id === id);
+    preencherForm("c_", c); $("c_obs").value = (c && c.obs) || "";
+    $("tituloCli").textContent = c ? "Editar cliente" : "Novo cliente";
+    $("btnExcluirCli").hidden = !c; $("btnOrcCli").hidden = !c;
+    $("btnExcluirCli").classList.remove("confirmar"); $("btnExcluirCli").textContent = "Excluir";
+    $("c_cepInfo").textContent = "";
+    mostrarDoc("c_"); renderListaCli(); renderPedidosCli();
+  }
+  function novoCliente() { editarCliente(null); irPara("clientes"); $("c_nome").focus(); }
+
+  $("formCli").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const o = lerForm("c_"); o.obs = $("c_obs").value.trim();
+    if (!o.nome) { avisoEm("toastCli", "Coloque o nome do cliente"); $("c_nome").focus(); return; }
+    if (!mostrarDoc("c_")) { avisoEm("toastCli", "Corrija o CPF/CNPJ antes de salvar"); return; }
+    if (editCli) { Object.assign(clientes.find((c) => c.id === editCli), o); }
+    else { o.id = "c" + Date.now().toString(36); clientes.push(o); editCli = o.id; }
+    salvarClientes(); editarCliente(editCli); avisoEm("toastCli", "Cliente salvo");
+  });
+  $("listaCli").addEventListener("click", (e) => { const b = e.target.closest("button[data-id]"); if (b) editarCliente(b.dataset.id); });
+  $("buscaCli").addEventListener("input", renderListaCli);
+  $("btnNovoCli").addEventListener("click", novoCliente);
+  $("btnNovoCliOrc").addEventListener("click", novoCliente);
+  $("btnExcluirCli").addEventListener("click", (e) => {
+    const b = e.currentTarget;
+    if (!b.classList.contains("confirmar")) { b.classList.add("confirmar"); b.textContent = "Clique de novo para excluir"; return; }
+    clientes = clientes.filter((c) => c.id !== editCli); salvarClientes(); editarCliente(null); avisoEm("toastCli", "Cliente excluído");
+  });
+  $("btnOrcCli").addEventListener("click", () => { if (!editCli) return; $("cliente").value = editCli; resumoCli(); render(); irPara("orcamento"); });
+  $("cliente").addEventListener("change", () => { resumoCli(); render(); });
+
+  // ---------- Etiqueta de envio (padrão Correios) ----------
+  const C128 = "212222 222122 222221 121223 121322 131222 122213 122312 132212 221213 221312 231212 112232 122132 122231 113222 123122 123221 223211 221132 221231 213212 223112 312131 311222 321122 321221 312212 322112 322211 212123 212321 232121 111323 131123 131321 112313 132113 132311 211313 231113 231311 112133 112331 132131 113123 113321 133121 313121 211331 231131 213113 213311 213131 311123 311321 331121 312113 312311 332111 314111 221411 431111 111224 111422 121124 121421 141122 141221 112214 112412 122114 122411 142112 142211 241211 221114 413111 241112 134111 111242 121142 121241 114212 124112 124211 411212 421112 421211 212141 214121 412121 111143 111341 131141 114113 114311 411113 411311 113141 114131 311141 411131 211412 211214 211232 2331112".split(" ");
+  function barrasCep(cep) {   // Code 128 (conjunto C) com os 8 dígitos do CEP
+    const d = soDig(cep);
+    if (d.length !== 8) return "";
+    const v = [105]; for (let i = 0; i < 8; i += 2) v.push(+d.slice(i, i + 2));
+    let ck = v[0]; for (let i = 1; i < v.length; i++) ck += v[i] * i;
+    v.push(ck % 103, 106);
+    let x = 10, rects = "";
+    v.forEach((w) => [...C128[w]].forEach((n, i) => { if (i % 2 === 0) rects += `<rect x="${x}" y="0" width="${n}" height="40"/>`; x += +n; }));
+    return `<svg viewBox="0 0 ${x + 10} 40" preserveAspectRatio="none" role="img" aria-label="Código de barras do CEP ${esc(cep)}"><rect x="0" y="0" width="${x + 10}" height="40" fill="#ffffff"/><g fill="#000000">${rects}</g></svg>`;
+  }
+  function blocoEtq(classe, titulo, o, comBarras) {
+    const l1 = [o.rua, o.numero].filter(Boolean).join(", ") + (o.compl ? " - " + o.compl : "");
+    const docLbl = soAlnum(o.doc).length === 14 ? "CNPJ" : "CPF";
+    return `<div class="etq-box ${classe}"><div class="etq-h">${titulo}</div><div class="etq-body">
+      <div class="etq-nome">${esc(o.nome || "")}</div>
+      ${l1 ? `<div>${esc(l1)}</div>` : ""}
+      ${o.bairro ? `<div>${esc(o.bairro)}</div>` : ""}
+      <div class="etq-cep"><b>${esc(o.cep || "")}</b>${esc([o.cidade, o.uf].filter(Boolean).join(" / "))}</div>
+      ${comBarras && barrasCep(o.cep) ? `<div class="etq-bar">${barrasCep(o.cep)}</div>` : ""}
+      ${(o.tel || o.doc) ? `<div class="etq-sm">${esc([o.tel ? "Tel: " + o.tel : "", o.doc ? docLbl + ": " + o.doc : ""].filter(Boolean).join("  ·  "))}</div>` : ""}
+    </div></div>`;
+  }
+  let etqDest = null, etqRem = null;
+  function faltando(o, quem) {
+    const f = [];
+    if (!o || !o.nome) f.push("nome"); 
+    if (!o || soDig(o.cep).length !== 8) f.push("CEP");
+    if (!o || !o.rua) f.push("rua"); if (!o || !o.numero) f.push("número");
+    if (!o || !o.cidade) f.push("cidade"); if (!o || !o.uf) f.push("UF");
+    return f.length ? `${quem}: falta ${f.join(", ")}.` : "";
+  }
+  const podeImprimir = () => !!(window.Android && window.Android.imprimir) || location.protocol === "file:";
+  function abrirEtiqueta(dest) {
+    etqDest = dest; etqRem = load(EMKEY, null);
+    $("etqPrint").innerHTML = blocoEtq("dest", "DESTINATÁRIO", dest, true) +
+      (etqRem && etqRem.nome ? blocoEtq("rem", "REMETENTE", etqRem, false) : "") +
+      `<div class="etq-rodape"><span>Volume 1/1</span><span>Peso: ________</span></div>`;
+    const avisos = [faltando(dest, "Destinatário"), etqRem && etqRem.nome ? faltando(etqRem, "Remetente") : "Remetente: cadastre sua empresa na aba Minha empresa."].filter(Boolean);
+    $("etqFalta").innerHTML = avisos.map(esc).join("<br>") + (avisos.some((a) => a.startsWith("Remetente")) ? ` <button type="button" class="linkbtn" id="etqIrEmpresa">Abrir Minha empresa</button>` : "");
+    $("etqFalta").hidden = !avisos.length;
+    const ok = podeImprimir();
+    $("etqImprimir").hidden = !ok; $("etqSemImpressao").hidden = ok;
+    $("etqModal").hidden = false; document.body.style.overflow = "hidden";
+    $("etqFechar").focus();
+  }
+  function fecharEtiqueta() { $("etqModal").hidden = true; document.body.style.overflow = ""; }
+  function aplicarTamanho() {
+    $("etqPage").textContent = $("etqTam").value === "a4" ? "@page { size: A4; margin: 10mm; }" : "@page { size: 100mm 150mm; margin: 0; }";
+    try { localStorage.setItem("calc3d-etq-tam", $("etqTam").value); } catch (e) {}
+  }
+  try { const t = localStorage.getItem("calc3d-etq-tam"); if (t) $("etqTam").value = t; } catch (e) {}
+  aplicarTamanho();
+  $("etqTam").addEventListener("change", aplicarTamanho);
+  $("etqFechar").addEventListener("click", fecharEtiqueta);
+  $("etqModal").addEventListener("click", (e) => {
+    if (e.target === $("etqModal")) fecharEtiqueta();
+    if (e.target.id === "etqIrEmpresa") { fecharEtiqueta(); irPara("empresa"); }
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("etqModal").hidden) fecharEtiqueta(); });
+  $("etqImprimir").addEventListener("click", () => {
+    aplicarTamanho();
+    if (window.Android && window.Android.imprimir) window.Android.imprimir(); else window.print();
+  });
+  $("etqCopiar").addEventListener("click", () => {
+    const txt = blocoEnvio("DESTINATÁRIO", etqDest || {}) + (etqRem && etqRem.nome ? "\n\n" + blocoEnvio("REMETENTE", etqRem) : "");
+    copiar(txt, "Texto da etiqueta copiado", (m) => avisoEm("toastEtq", m));
+  });
+  $("btnEtiqueta").addEventListener("click", () => {
+    const c = clienteAtual();
+    if (!c) { aviso("Escolha um cliente no orçamento primeiro"); return; }
+    abrirEtiqueta(c);
+  });
+  $("btnEtqCli").addEventListener("click", () => {
+    const o = lerForm("c_");
+    if (!o.nome) { avisoEm("toastCli", "Coloque o nome do cliente"); $("c_nome").focus(); return; }
+    abrirEtiqueta(o);
+  });
+
+  // Backup
+  $("btnBackup").addEventListener("click", () => {
+    const dados = {};
+    [KEY, LKEY, EKEY, CKEY, EMKEY, OKEY, DPKEY, DKEY].forEach((k) => { const v = load(k, null); if (v !== null) dados[k] = v; });
+    chavesImagens().forEach((k) => { const v = load(k, null); if (v) dados[k] = v; });
+    copiar(JSON.stringify({ app: "custo3d", versao: 1, dados }), "Backup copiado. Guarde esse texto.", (m) => avisoEm("toastBkp", m));
+  });
+  $("btnRestaurar").addEventListener("click", () => {
+    try {
+      const b = JSON.parse($("txtBackup").value);
+      if (!b || b.app !== "custo3d" || !b.dados) throw 0;
+      Object.entries(b.dados).forEach(([k, v]) => save(k, v));
+      avisoEm("toastBkp", "Backup restaurado. Recarregando…");
+      setTimeout(() => location.reload(), 900);
+    } catch (e) { avisoEm("toastBkp", "Esse texto não é um backup válido da calculadora"); }
+  });
+
+  // Abas
+  const VIEWS = { orcamento: "vOrcamento", clientes: "vClientes", empresa: "vEmpresa" };
+  function mostrarView(v) {
+    if (!VIEWS[v]) v = "orcamento";
+    Object.entries(VIEWS).forEach(([k, id]) => ($(id).hidden = k !== v));
+    document.querySelectorAll(".tabs a").forEach((a) => { if (a.dataset.v === v) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  }
+  function irPara(v) { if (location.hash !== "#" + v) { try { location.hash = v; } catch (e) {} } mostrarView(v); window.scrollTo(0, 0); }
+  window.addEventListener("hashchange", () => mostrarView(location.hash.slice(1)));
+  document.querySelector(".tabs").addEventListener("click", (e) => { const a = e.target.closest("a[data-v]"); if (a) { e.preventDefault(); irPara(a.dataset.v); } });
+
+  // ---------- Foto e link do produto ----------
+  const IMGP = "calc3d-img-";
+  function imgDe(id) { return id ? load(IMGP + id, null) : null; }
+  function chavesImagens() {
+    const k = [];
+    try { for (let i = 0; i < localStorage.length; i++) { const n = localStorage.key(i); if (n && n.startsWith(IMGP)) k.push(n); } } catch (e) {}
+    return k;
+  }
+  function limparImagens() {   // apaga fotos que não estão mais em nenhum orçamento ou pedido
+    const usadas = new Set([$("imgId").value]);
+    load(LKEY, []).forEach((o) => o.cfg && usadas.add(o.cfg.imgId));
+    load(OKEY, []).forEach((p) => { usadas.add(p.imgId); p.cfg && usadas.add(p.cfg.imgId); });
+    chavesImagens().forEach((k) => { if (!usadas.has(k.slice(IMGP.length))) { try { localStorage.removeItem(k); } catch (e) {} } });
+  }
+  function mostrarFoto() {
+    const src = imgDe($("imgId").value);
+    $("fotoPrev").innerHTML = src ? `<img src="${src}" alt="Foto do produto">` : "<span>Sem foto</span>";
+    $("btnFotoRem").hidden = !src;
+    $("btnFoto").textContent = src ? "Trocar foto" : "Escolher foto";
+  }
+  function linkUrl() {
+    let v = $("link").value.trim();
+    if (v && !/^https?:\/\//i.test(v)) v = "https://" + v;
+    return v;
+  }
+  function atualizarLink() {
+    const u = linkUrl(), a = $("linkAbrir");
+    a.hidden = !u; if (u) a.href = u;
+  }
+  function reduzirImagem(arq) {
+    return new Promise((ok, falha) => {
+      const url = URL.createObjectURL(arq), img = new Image();
+      img.onload = () => {
+        const max = 480, esc2 = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.width * esc2); c.height = Math.round(img.height * esc2);
+        const g = c.getContext("2d"); g.fillStyle = "#ffffff"; g.fillRect(0, 0, c.width, c.height);
+        g.drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        ok(c.toDataURL("image/jpeg", 0.72));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); falha(new Error("img")); };
+      img.src = url;
+    });
+  }
+  async function definirFoto(arq) {
+    if (!arq || !/^image\//.test(arq.type)) { avisoEm("toastFoto", "Escolha um arquivo de imagem (JPG ou PNG)"); return; }
+    try {
+      const dataUrl = await reduzirImagem(arq);
+      const id = "i" + Date.now().toString(36);
+      try { localStorage.setItem(IMGP + id, JSON.stringify(dataUrl)); }
+      catch (e) { limparImagens(); try { localStorage.setItem(IMGP + id, JSON.stringify(dataUrl)); } catch (e2) { avisoEm("toastFoto", "Sem espaço para mais fotos. Exclua pedidos ou orçamentos antigos."); return; } }
+      $("imgId").value = id; mostrarFoto(); render(); limparImagens();
+      avisoEm("toastFoto", "Foto salva");
+    } catch (e) { avisoEm("toastFoto", "Não consegui abrir essa imagem"); }
+  }
+  $("btnFoto").addEventListener("click", () => $("fotoArq").click());
+  $("fotoPrev").addEventListener("click", () => $("fotoArq").click());
+  $("fotoPrev").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("fotoArq").click(); } });
+  $("fotoArq").addEventListener("change", (e) => { definirFoto(e.target.files[0]); e.target.value = ""; });
+  ["dragenter", "dragover"].forEach((t) => $("fotoPrev").addEventListener(t, (e) => { e.preventDefault(); e.stopPropagation(); $("fotoPrev").classList.add("drag"); }));
+  ["dragleave", "drop"].forEach((t) => $("fotoPrev").addEventListener(t, (e) => { e.preventDefault(); e.stopPropagation(); $("fotoPrev").classList.remove("drag"); }));
+  $("fotoPrev").addEventListener("drop", (e) => definirFoto(e.dataTransfer.files[0]));
+  $("btnFotoRem").addEventListener("click", () => { $("imgId").value = ""; mostrarFoto(); render(); limparImagens(); });
+  $("link").addEventListener("input", atualizarLink);
+  $("link").addEventListener("blur", () => { if ($("link").value.trim()) { $("link").value = linkUrl(); atualizarLink(); render(); } });
+
+  // ---------- Pedidos da empresa ----------
+  const OKEY = "calc3d-pedidos-v1";
+  const STATUS = ["Novo", "Em produção", "Pronto", "Enviado", "Entregue", "Cancelado"];
+  let pedidos = load(OKEY, []);
+  const fmtNum = (n) => "#" + String(n).padStart(4, "0");
+  const fmtData = (iso) => { const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleDateString("pt-BR"); };
+  const mesDe = (iso) => String(iso || "").slice(0, 7);
+  const nomeMes = (ym) => { const [y, m] = ym.split("-"); const d = new Date(+y, +m - 1, 1); return d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" }); };
+
+  function salvarPedidos() { save(OKEY, pedidos); renderPedidos(); renderPedidosCli(); renderDespesas(); }
+
+  $("btnPedido").addEventListener("click", () => {
+    const r = render();
+    const c = clienteAtual();
+    const numero = pedidos.reduce((m, p) => Math.max(m, p.num || 0), 0) + 1;
+    const cfg = { tensao: tensao(), energiaFixa: $("energiaFixa").checked, precoFixo: $("precoFixo").checked };
+    ids.forEach((id) => (cfg[id] = $(id).value));
+    pedidos.unshift({
+      id: "p" + Date.now().toString(36), num: numero, data: new Date().toISOString(),
+      cliente: c ? JSON.parse(JSON.stringify(c)) : null,
+      peca: $("nome").value.trim() || "Sem nome", imgId: $("imgId").value, link: linkUrl(), qtd: r.qtd, peso: num("peso"), seg: Math.round(r.horas * 3600),
+      custo: r.custo, preco: r.preco, lucro: r.lucro, status: "Novo", pago: false,
+      cfg, extras: JSON.parse(JSON.stringify(extras)),
+    });
+    salvarPedidos();
+    aviso(`Pedido ${fmtNum(numero)} registrado${c ? " para " + c.nome : ""}`);
+  });
+
+  function filtrados() {
+    const st = $("fStatus").value, mes = $("fMes").value, q = $("fBusca").value.trim().toLowerCase();
+    return pedidos.filter((p) =>
+      (!st || (st === "abertos" ? !["Entregue", "Cancelado"].includes(p.status) : p.status === st)) &&
+      (!mes || mesDe(p.data) === mes) &&
+      (!q || fmtNum(p.num).includes(q) || String(p.num) === q.replace("#", "") || p.peca.toLowerCase().includes(q) || (p.cliente && p.cliente.nome.toLowerCase().includes(q))));
+  }
+
+  function renderPedidos() {
+    // opções dos filtros
+    const selSt = $("fStatus");
+    if (selSt.options.length === 2) STATUS.forEach((s) => selSt.add(new Option(s, s)));
+    const selMes = $("fMes"), mAtual = selMes.value;
+    const meses = [...new Set(pedidos.map((p) => mesDe(p.data)))].sort().reverse();
+    selMes.innerHTML = `<option value="">Todos os meses</option>` + meses.map((m) => `<option value="${m}">${nomeMes(m)}</option>`).join("");
+    selMes.value = meses.includes(mAtual) ? mAtual : "";
+
+    const lista = filtrados();
+    const validos = lista.filter((p) => p.status !== "Cancelado");
+    $("kQtd").textContent = validos.length;
+    $("kFat").textContent = brl(validos.reduce((a, p) => a + p.preco, 0));
+    $("kLuc").textContent = brl(validos.reduce((a, p) => a + p.lucro, 0));
+    $("kRec").textContent = brl(validos.filter((p) => !p.pago).reduce((a, p) => a + p.preco, 0));
+
+    $("pedBody").innerHTML = lista.map((p) => `
+      <tr data-id="${p.id}" class="${p.status === "Cancelado" ? "cancelado" : ""}">
+        <td class="num">${fmtNum(p.num)}</td>
+        <td class="num">${fmtData(p.data)}</td>
+        <td>${p.cliente ? esc(p.cliente.nome) : '<span class="hint">Sem cliente</span>'}${p.cliente && p.cliente.cidade ? `<small>${esc(p.cliente.cidade)}${p.cliente.uf ? "/" + esc(p.cliente.uf) : ""}</small>` : ""}</td>
+        <td><div class="ped-prod">${imgDe(p.imgId) ? `<img src="${imgDe(p.imgId)}" alt="">` : ""}<div>${esc(p.peca)}${p.qtd > 1 ? `<small>${p.qtd} peças</small>` : ""}${p.link ? `<a href="${esc(p.link)}" target="_blank" rel="noopener noreferrer">Abrir site ↗</a>` : ""}</div></div></td>
+        <td class="money">${brl(p.preco)}</td>
+        <td class="money ${p.lucro < 0 ? "neg" : ""}">${brl(p.lucro)}</td>
+        <td><select class="st" data-v="${esc(p.status)}" data-k="status" aria-label="Status do pedido ${fmtNum(p.num)}">${STATUS.map((s) => `<option${s === p.status ? " selected" : ""}>${s}</option>`).join("")}</select></td>
+        <td><input type="checkbox" data-k="pago" ${p.pago ? "checked" : ""} aria-label="Pedido ${fmtNum(p.num)} pago"></td>
+        <td class="acoes">
+          <button type="button" data-a="abrir" title="Abrir no orçamento">Abrir</button>
+          ${p.cliente ? `<button type="button" data-a="etq" title="Etiqueta de envio">Etiqueta</button>` : ""}
+          <button type="button" data-a="del" class="perigo" title="Excluir pedido">Excluir</button>
+        </td>
+      </tr>`).join("");
+    $("pedVazio").hidden = lista.length > 0;
+    $("pedVazio").innerHTML = pedidos.length
+      ? "Nenhum pedido com esses filtros."
+      : "Nenhum pedido ainda. No Orçamento, escolha o cliente, calcule e clique em <b>Registrar pedido</b>.";
+    $("pedidos").querySelector(".tbl-wrap").hidden = lista.length === 0;
+  }
+
+  function renderPedidosCli() {
+    const box = $("cliPedBox");
+    if (!editCli) { box.hidden = true; return; }
+    const meus = pedidos.filter((p) => p.cliente && p.cliente.id === editCli);
+    box.hidden = false;
+    const validos = meus.filter((p) => p.status !== "Cancelado");
+    $("cliPedResumo").textContent = meus.length
+      ? `${validos.length} pedido${validos.length === 1 ? "" : "s"} · total ${brl(validos.reduce((a, p) => a + p.preco, 0))}` + (validos.some((p) => !p.pago) ? ` · a receber ${brl(validos.filter((p) => !p.pago).reduce((a, p) => a + p.preco, 0))}` : "")
+      : "Nenhum pedido deste cliente ainda.";
+    $("cliPedLista").innerHTML = meus.map((p) =>
+      `<li><span class="num">${fmtNum(p.num)}</span><span class="n">${esc(p.peca)}${p.link ? `<a href="${esc(p.link)}" target="_blank" rel="noopener noreferrer">site ↗</a>` : ""} <small>${fmtData(p.data)}</small></span><small>${esc(p.status)}${p.pago ? " · pago" : ""}</small><b>${brl(p.preco)}</b></li>`).join("");
+  }
+
+  $("pedBody").addEventListener("change", (e) => {
+    const tr = e.target.closest("tr[data-id]"); if (!tr) return;
+    const p = pedidos.find((x) => x.id === tr.dataset.id); if (!p) return;
+    if (e.target.dataset.k === "status") p.status = e.target.value;
+    if (e.target.dataset.k === "pago") p.pago = e.target.checked;
+    salvarPedidos();
+  });
+  $("pedBody").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-a]"); if (!b) return;
+    const p = pedidos.find((x) => x.id === b.closest("tr").dataset.id); if (!p) return;
+    if (b.dataset.a === "abrir") {
+      aplicarCfg(p.cfg);
+      if (Array.isArray(p.extras)) { extras = JSON.parse(JSON.stringify(p.extras)); renderExtras(); }
+      if (p.cliente && clientes.some((c) => c.id === p.cliente.id)) $("cliente").value = p.cliente.id;
+      resumoCli(); render(); irPara("orcamento"); aviso(`Pedido ${fmtNum(p.num)} aberto no orçamento`);
+    } else if (b.dataset.a === "etq") {
+      const atual = clientes.find((c) => c.id === p.cliente.id);
+      abrirEtiqueta(atual || p.cliente);
+    } else if (b.dataset.a === "del") {
+      if (!b.classList.contains("confirmar")) { b.classList.add("confirmar"); b.textContent = "Confirmar"; setTimeout(() => { b.classList.remove("confirmar"); b.textContent = "Excluir"; }, 4000); return; }
+      pedidos = pedidos.filter((x) => x.id !== p.id); salvarPedidos(); limparImagens(); avisoEm("toastPed", `Pedido ${fmtNum(p.num)} excluído`);
+    }
+  });
+  ["fStatus", "fMes"].forEach((id) => $(id).addEventListener("change", renderPedidos));
+  $("fBusca").addEventListener("input", renderPedidos);
+  $("btnCopiarPed").addEventListener("click", () => {
+    const n2 = (v) => (Math.round(v * 100) / 100).toFixed(2).replace(".", ",");
+    const linhas = [["Pedido", "Data", "Cliente", "CPF/CNPJ", "Cidade/UF", "Peça", "Qtd", "Peso (g)", "Custo", "Valor", "Lucro", "Status", "Pago"].join("\t")]
+      .concat(filtrados().map((p) => [fmtNum(p.num), fmtData(p.data), p.cliente ? p.cliente.nome : "", p.cliente ? p.cliente.doc || "" : "",
+        p.cliente ? [p.cliente.cidade, p.cliente.uf].filter(Boolean).join("/") : "", p.peca, p.qtd, n2(p.peso), n2(p.custo), n2(p.preco), n2(p.lucro), p.status, p.pago ? "Sim" : "Não"].join("\t")));
+    copiar(linhas.join("\n"), "Lista copiada. Cole no Excel ou Google Planilhas.", (m) => avisoEm("toastPed", m));
+  });
+
+  // ---------- Despesas da empresa ----------
+  const DPKEY = "calc3d-desp-produtos-v1", DKEY = "calc3d-despesas-v1";
+  const CATS = ["Filamento", "Peças e manutenção", "Ferramentas e equipamentos", "Embalagem", "Frete e correios", "Energia", "Taxas e impostos", "Outros"];
+  let dprod = load(DPKEY, []);
+  let desp = load(DKEY, []);
+  let editProd = null;
+  const hojeISO = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+  const fmtDia = (ymd) => { const [y, m, d] = String(ymd).split("-"); return d && m && y ? `${d}/${m}/${y}` : ""; };
+
+  function salvarDesp() { save(DPKEY, dprod); save(DKEY, desp); renderDespesas(); }
+
+  function renderSelectProd() {
+    const sel = $("dProd"), atual = sel.value;
+    const grupos = CATS.map((c) => {
+      const itens = dprod.filter((p) => p.cat === c).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+      return itens.length ? `<optgroup label="${esc(c)}">${itens.map((p) => `<option value="${p.id}">${esc(p.nome)}</option>`).join("")}</optgroup>` : "";
+    }).join("");
+    sel.innerHTML = `<option value="">${dprod.length ? "Selecione o produto" : "Cadastre um produto primeiro"}</option>${grupos}<option value="__novo">+ Cadastrar novo produto…</option>`;
+    sel.value = dprod.some((p) => p.id === atual) ? atual : "";
+  }
+  function renderCatalogo() {
+    $("listaProd").innerHTML = [...dprod].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")).map((p) =>
+      `<li data-id="${p.id}"><span>${esc(p.nome)} <span class="chip">${esc(p.cat)}</span></span><b>${brl(p.preco)}</b><button type="button" data-a="ed">Editar</button><button type="button" class="perigo" data-a="del">Excluir</button></li>`).join("");
+    $("vazioProd").hidden = dprod.length > 0;
+    $("cntProd").textContent = dprod.length ? dprod.length : "";
+  }
+  function previaLanc() {
+    const t = num("dQtd") * num("dUnit");
+    $("dPrev").textContent = $("dProd").value && $("dProd").value !== "__novo" ? `Total desta compra: ${brl(t)}` : "";
+  }
+  function despFiltradas() {
+    const mes = $("fMesD").value, cat = $("fCatD").value;
+    return desp.filter((d) => (!mes || d.data.slice(0, 7) === mes) && (!cat || d.cat === cat))
+      .sort((a, b) => (b.data + b.id).localeCompare(a.data + a.id));
+  }
+  function renderDespesas() {
+    // filtros
+    const selMes = $("fMesD"), mAtual = selMes.dataset.init ? selMes.value : hojeISO().slice(0, 7);
+    selMes.dataset.init = "1";
+    const meses = [...new Set([hojeISO().slice(0, 7), ...desp.map((d) => d.data.slice(0, 7)), ...pedidos.map((p) => mesDe(p.data))])].filter(Boolean).sort().reverse();
+    selMes.innerHTML = `<option value="">Todos os meses</option>` + meses.map((m) => `<option value="${m}">${nomeMes(m)}</option>`).join("");
+    selMes.value = meses.includes(mAtual) || mAtual === "" ? mAtual : "";
+    const selCat = $("fCatD");
+    if (selCat.options.length === 1) CATS.forEach((c) => selCat.add(new Option(c, c)));
+
+    const lista = despFiltradas();
+    const mes = selMes.value;
+    const tot = lista.reduce((a, d) => a + d.total, 0);
+    const fat = pedidos.filter((p) => p.status !== "Cancelado" && (!mes || mesDe(p.data) === mes)).reduce((a, p) => a + p.preco, 0);
+    $("dTot").textContent = brl(tot);
+    $("dFat").textContent = brl(fat);
+    const saldo = fat - tot;
+    $("dSaldo").textContent = brl(saldo);
+    $("dSaldo").className = saldo < 0 ? "neg" : saldo > 0 ? "pos" : "";
+
+    $("despBody").innerHTML = lista.map((d) => `
+      <tr data-id="${d.id}">
+        <td class="num">${fmtDia(d.data)}</td>
+        <td>${esc(d.nome)}</td>
+        <td><span class="chip">${esc(d.cat)}</span></td>
+        <td class="money">${String(d.qtd).replace(".", ",")}</td>
+        <td class="money">${brl(d.unit)}</td>
+        <td class="money"><b>${brl(d.total)}</b></td>
+        <td class="acoes"><button type="button" class="perigo" data-a="del">Excluir</button></td>
+      </tr>`).join("");
+    $("despWrap").hidden = lista.length === 0;
+    $("despVazio").hidden = lista.length > 0;
+    $("despVazio").textContent = desp.length ? "Nenhuma despesa lançada neste período." : "Nenhuma despesa lançada ainda. Selecione o produto acima, a quantidade e clique em Lançar despesa.";
+    renderSelectProd(); renderCatalogo(); previaLanc();
+  }
+
+  $("dProd").addEventListener("change", () => {
+    const v = $("dProd").value;
+    if (v === "__novo") { $("dProd").value = ""; $("catDesp").open = true; editProd = null; limparFormProd(); $("pNome").focus(); previaLanc(); return; }
+    const p = dprod.find((x) => x.id === v);
+    if (p) $("dUnit").value = p.preco || "";
+    previaLanc();
+  });
+  ["dQtd", "dUnit"].forEach((id) => $(id).addEventListener("input", previaLanc));
+  $("btnLancar").addEventListener("click", () => {
+    const p = dprod.find((x) => x.id === $("dProd").value);
+    if (!p) { avisoEm("toastDesp", dprod.length ? "Selecione o produto que você comprou" : "Cadastre o produto em Produtos de despesa"); if (!dprod.length) { $("catDesp").open = true; $("pNome").focus(); } return; }
+    const qtd = num("dQtd"), unit = parseFloat(String($("dUnit").value).replace(",", "."));
+    if (!(qtd > 0)) { avisoEm("toastDesp", "Coloque a quantidade"); return; }
+    if (!(unit >= 0)) { avisoEm("toastDesp", "Coloque o valor unitário"); return; }
+    const data = $("dData").value || hojeISO();
+    desp.push({ id: "d" + Date.now().toString(36), data, prodId: p.id, nome: p.nome, cat: p.cat, qtd, unit, total: Math.round(qtd * unit * 100) / 100 });
+    if (unit !== p.preco) p.preco = unit;   // guarda o último preço pago
+    $("dQtd").value = 1;
+    salvarDesp();
+    avisoEm("toastDesp", `Despesa lançada: ${p.nome} · ${brl(qtd * unit)}`);
+  });
+  $("despBody").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-a=del]"); if (!b) return;
+    if (!b.classList.contains("confirmar")) { b.classList.add("confirmar"); b.textContent = "Confirmar"; setTimeout(() => { b.classList.remove("confirmar"); b.textContent = "Excluir"; }, 4000); return; }
+    desp = desp.filter((d) => d.id !== b.closest("tr").dataset.id); salvarDesp(); avisoEm("toastDesp", "Despesa excluída");
+  });
+  ["fMesD", "fCatD"].forEach((id) => $(id).addEventListener("change", renderDespesas));
+
+  // catálogo de produtos
+  function limparFormProd() {
+    $("pNome").value = ""; $("pPreco").value = ""; $("pCat").value = CATS[0];
+    $("btnSalvarProd").textContent = "Adicionar"; $("btnCancelarProd").hidden = true;
+  }
+  $("pCat").innerHTML = CATS.map((c) => `<option>${c}</option>`).join("");
+  $("btnSalvarProd").addEventListener("click", () => {
+    const nome = $("pNome").value.trim();
+    if (!nome) { avisoEm("toastDesp", "Coloque o nome do produto"); $("pNome").focus(); return; }
+    const dados = { nome, cat: $("pCat").value, preco: parseFloat(String($("pPreco").value).replace(",", ".")) || 0 };
+    let id = editProd;
+    if (editProd) Object.assign(dprod.find((p) => p.id === editProd), dados);
+    else { id = "dp" + Date.now().toString(36); dprod.push({ id, ...dados }); }
+    editProd = null; limparFormProd(); salvarDesp();
+    $("dProd").value = id; $("dUnit").value = dados.preco || ""; previaLanc();
+    avisoEm("toastDesp", `Produto salvo: ${nome}`);
+  });
+  $("btnCancelarProd").addEventListener("click", () => { editProd = null; limparFormProd(); });
+  $("listaProd").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-a]"); if (!b) return;
+    const id = b.closest("li").dataset.id, p = dprod.find((x) => x.id === id); if (!p) return;
+    if (b.dataset.a === "ed") {
+      editProd = id; $("pNome").value = p.nome; $("pCat").value = p.cat; $("pPreco").value = p.preco || "";
+      $("btnSalvarProd").textContent = "Salvar"; $("btnCancelarProd").hidden = false; $("pNome").focus();
+    } else {
+      if (!b.classList.contains("confirmar")) { b.classList.add("confirmar"); b.textContent = "Confirmar"; setTimeout(() => { b.classList.remove("confirmar"); b.textContent = "Excluir"; }, 4000); return; }
+      dprod = dprod.filter((x) => x.id !== id); salvarDesp(); avisoEm("toastDesp", "Produto removido. As despesas já lançadas continuam.");
+    }
+  });
+  $("btnCopiarDesp").addEventListener("click", () => {
+    const n2 = (v) => (Math.round(v * 100) / 100).toFixed(2).replace(".", ",");
+    const linhas = [["Data", "Produto", "Categoria", "Quantidade", "Valor unitário", "Total"].join("\t")]
+      .concat(despFiltradas().map((d) => [fmtDia(d.data), d.nome, d.cat, String(d.qtd).replace(".", ","), n2(d.unit), n2(d.total)].join("\t")));
+    copiar(linhas.join("\n"), "Lista copiada. Cole no Excel ou Google Planilhas.", (m) => avisoEm("toastDesp", m));
+  });
+  $("dData").value = hojeISO();
+  limparFormProd();
+
+  ligarMascaras("c_"); ligarMascaras("e_");
+  renderSelectCli(); renderListaCli(); editarCliente(null); carregarEmpresa(); renderPedidos(); renderDespesas();
+  mostrarView(location.hash.slice(1));
+
+  // ---------- Importar do fatiador ----------
+  async function lerZip(buf) {
+    const dv = new DataView(buf);
+    let eocd = -1;
+    for (let i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 65557); i--) {
+      if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    }
+    if (eocd < 0) throw new Error("zip");
+    const total = dv.getUint16(eocd + 10, true);
+    let p = dv.getUint32(eocd + 16, true);
+    const dec = new TextDecoder();
+    const entradas = [];
+    for (let n = 0; n < total; n++) {
+      if (dv.getUint32(p, true) !== 0x02014b50) break;
+      const metodo = dv.getUint16(p + 10, true);
+      const tam = dv.getUint32(p + 20, true);
+      const lenNome = dv.getUint16(p + 28, true), lenExtra = dv.getUint16(p + 30, true), lenCom = dv.getUint16(p + 32, true);
+      const off = dv.getUint32(p + 42, true);
+      const nome = dec.decode(new Uint8Array(buf, p + 46, lenNome));
+      entradas.push({ nome, metodo, tam, off });
+      p += 46 + lenNome + lenExtra + lenCom;
+    }
+    async function texto(e) {
+      const ini = e.off + 30 + dv.getUint16(e.off + 26, true) + dv.getUint16(e.off + 28, true);
+      const bytes = new Uint8Array(buf, ini, e.tam);
+      if (e.metodo === 0) return dec.decode(bytes);
+      if (e.metodo !== 8 || typeof DecompressionStream === "undefined") throw new Error("compressao");
+      const s = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+      return dec.decode(await new Response(s).arrayBuffer());
+    }
+    return { entradas, texto };
+  }
+
+  function duracao(s) {
+    let t = 0;
+    const m = (re) => { const r = s.match(re); return r ? +r[1] : 0; };
+    t += m(/(\d+)\s*d/) * 86400 + m(/(\d+)\s*h/) * 3600 + m(/(\d+)\s*m(?!s)/) * 60 + m(/(\d+)\s*s/);
+    return t;
+  }
+
+  function lerGcode(txt) {
+    const trecho = txt.length > 400000 ? txt.slice(0, 200000) + "\n" + txt.slice(-200000) : txt;
+    let seg = 0, g = 0;
+    const tempo = trecho.match(/total estimated time\s*:\s*([^;\n]+)/i)
+      || trecho.match(/estimated printing time \(normal mode\)\s*=\s*([^\n]+)/i)
+      || trecho.match(/model printing time\s*:\s*([^;\n]+)/i);
+    if (tempo) seg = duracao(tempo[1]);
+    const peso = trecho.match(/total filament weight \[g\]\s*:\s*([\d.,\s]+)/i)
+      || trecho.match(/filament used \[g\]\s*=\s*([\d.,\s]+)/i);
+    if (peso) g = peso[1].split(/,\s*/).reduce((a, v) => a + (parseFloat(v) || 0), 0);
+    return { seg, g };
+  }
+
+  function lerSliceInfo(xml) {
+    const doc = new DOMParser().parseFromString(xml, "application/xml");
+    return [...doc.getElementsByTagName("plate")].map((pl, i) => {
+      const meta = {};
+      [...pl.children].filter((c) => c.tagName === "metadata").forEach((c) => (meta[c.getAttribute("key")] = c.getAttribute("value")));
+      let g = parseFloat(meta.weight) || 0;
+      if (!g) g = [...pl.getElementsByTagName("filament")].reduce((a, f) => a + (parseFloat(f.getAttribute("used_g")) || 0), 0);
+      return { nome: "Placa " + (meta.index || i + 1), seg: parseFloat(meta.prediction) || 0, g };
+    }).filter((p) => p.seg > 0 || p.g > 0);
+  }
+
+  let placas = [];
+  let nomeArquivo = "";
+
+  function status(msg, erro) {
+    const el = $("impStatus");
+    el.textContent = msg; el.hidden = !msg; el.classList.toggle("erro", !!erro);
+  }
+
+  function aplicarPlaca(pl) {
+    if (pl.g > 0) $("peso").value = Math.round(pl.g * 10) / 10;
+    if (pl.seg > 0) {
+      const min = Math.round(pl.seg / 60);
+      $("horas").value = Math.floor(min / 60);
+      $("minutos").value = min % 60;
+    }
+    if (nomeArquivo) $("nome").value = nomeArquivo + (placas.length > 1 && !pl.soma ? " (" + pl.nome.toLowerCase() + ")" : "");
+    render();
+    const min = Math.round(pl.seg / 60);
+    status(`Importado: ${String(Math.round(pl.g * 10) / 10).replace(".", ",")} g · ${Math.floor(min / 60)} h ${min % 60} min`);
+  }
+
+  function mostrarPlacas() {
+    const box = $("placaBox");
+    if (placas.length < 2) { box.hidden = true; return; }
+    const soma = { nome: "Todas as placas (soma)", soma: true, seg: placas.reduce((a, p) => a + p.seg, 0), g: placas.reduce((a, p) => a + p.g, 0) };
+    const ops = [...placas, soma];
+    $("placa").innerHTML = ops.map((p, i) => `<option value="${i}">${esc(p.nome)}</option>`).join("");
+    $("placa").onchange = () => aplicarPlaca(ops[+$("placa").value]);
+    box.hidden = false;
+  }
+
+  async function importar(arq) {
+    if (!arq) return;
+    status("Lendo arquivo…");
+    nomeArquivo = arq.name.replace(/\.(gcode\.3mf|3mf|gcode|gco|bgcode)$/i, "").replace(/[_]+/g, " ").trim();
+    placas = [];
+    try {
+      const buf = await arq.arrayBuffer();
+      const ehZip = buf.byteLength > 4 && new DataView(buf).getUint32(0, true) === 0x04034b50;
+      if (ehZip) {
+        const z = await lerZip(buf);
+        const info = z.entradas.find((e) => /slice_info\.config$/i.test(e.nome));
+        if (info) placas = lerSliceInfo(await z.texto(info));
+        if (!placas.length) {
+          const gcodes = z.entradas.filter((e) => /\.gcode$/i.test(e.nome));
+          for (const e of gcodes) {
+            const r = lerGcode(await z.texto(e));
+            if (r.seg || r.g) placas.push({ nome: e.nome.split("/").pop().replace(/\.gcode$/i, "").replace("plate_", "Placa "), ...r });
+          }
+        }
+        if (!placas.length) throw new Error("semdados");
+      } else {
+        const r = lerGcode(new TextDecoder().decode(buf));
+        if (!r.seg && !r.g) throw new Error("semdados");
+        placas = [{ nome: "G-code", ...r }];
+      }
+      mostrarPlacas();
+      aplicarPlaca(placas[0]);
+    } catch (e) {
+      $("placaBox").hidden = true;
+      status(e.message === "semdados"
+        ? "Esse arquivo não tem peso nem tempo. Fatie a placa no Bambu Studio e exporte com File › Export › Export plate sliced file."
+        : "Não consegui ler esse arquivo. Use o .gcode.3mf exportado depois de fatiar ou um .gcode.", true);
+    }
+  }
+
+  $("btnImportar").addEventListener("click", () => $("arquivo").click());
+  $("arquivo").addEventListener("change", (e) => { importar(e.target.files[0]); e.target.value = ""; });
+  const dz = $("dropZone");
+  ["dragenter", "dragover"].forEach((t) => dz.addEventListener(t, (e) => { e.preventDefault(); dz.classList.add("drag"); }));
+  ["dragleave", "drop"].forEach((t) => dz.addEventListener(t, (e) => { e.preventDefault(); dz.classList.remove("drag"); }));
+  dz.addEventListener("drop", (e) => importar(e.dataTransfer.files[0]));
+  window.addEventListener("dragover", (e) => e.preventDefault());
+  window.addEventListener("drop", (e) => e.preventDefault());
+
+  // iniciar
+  const cfg = load(KEY, null);
+  if (cfg) aplicarCfg(cfg);
+  resumoCli();
+  renderExtras();
+  render();
+  renderLista();
+
+  // Dados enviados pelo monitor do Bambu Studio (?peso=..&seg=..)
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.has("peso") || q.has("seg")) {
+      nomeArquivo = q.get("nome") || "";
+      const pl = { nome: "", g: parseFloat(q.get("peso")) || 0, seg: parseFloat(q.get("seg")) || 0 };
+      aplicarPlaca(pl);
+      $("impStatus").textContent = "Recebido do Bambu Studio: " + $("impStatus").textContent.replace("Importado: ", "");
+      try { history.replaceState(null, "", location.pathname); } catch (e) {}
+    }
+  } catch (e) {}
+};
+</script>
+<script src="nuvem-supabase.js"></script>
+</body>
+</html>
