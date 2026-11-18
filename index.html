@@ -393,7 +393,7 @@ details.cat[open] > summary { border-bottom: 1px solid var(--line); }
     <a href="#orcamento" data-v="orcamento" aria-current="page">Orçamento</a>
     <a href="#clientes" data-v="clientes">Clientes<span class="cnt" id="cntCli"></span></a>
     <a href="#empresa" data-v="empresa">Minha empresa</a>
-    <span class="nuvem" id="nuvemChip" hidden></span>
+    <span class="nuvem" id="nuvemChip" hidden role="button" tabindex="0" style="cursor:pointer" title="Nuvem"></span>
   </nav>
 
   <section id="vOrcamento">
@@ -828,35 +828,6 @@ details.cat[open] > summary { border-bottom: 1px solid var(--line); }
         <span class="toast" id="toastEmp" role="status"></span>
       </div>
       <fieldset>
-        <legend>Nuvem (Supabase)</legend>
-        <p class="note">Conecte ao seu projeto do Supabase para guardar tudo na nuvem: cadastros, orçamentos, pedidos, despesas e fotos. Assim o PC e o celular usam os mesmos dados. Sem internet, a calculadora continua funcionando e envia as alterações quando a conexão voltar.</p>
-        <div class="row">
-          <div class="f span2">
-            <label for="sbUrl">URL do projeto</label>
-            <div class="inp"><input id="sbUrl" type="url" placeholder="https://xxxxxxxx.supabase.co" autocomplete="off"></div>
-          </div>
-          <div class="f span2">
-            <label for="sbChave">Chave pública (anon / publishable)</label>
-            <div class="inp"><input id="sbChave" type="text" placeholder="eyJ... ou sb_publishable_..." autocomplete="off"></div>
-          </div>
-          <div class="f span2">
-            <label for="sbEmail">E-mail</label>
-            <div class="inp"><input id="sbEmail" type="email" autocomplete="username"></div>
-          </div>
-          <div class="f span2">
-            <label for="sbSenha">Senha</label>
-            <div class="inp"><input id="sbSenha" type="password" autocomplete="current-password"></div>
-          </div>
-        </div>
-        <div class="cad-acoes">
-          <button type="button" class="primary" id="btnSbEntrar">Conectar</button>
-          <button type="button" id="btnSbSinc">Sincronizar agora</button>
-          <button type="button" id="btnSbSair">Desconectar</button>
-          <span class="toast" id="toastSb" role="status"></span>
-        </div>
-        <p class="note" id="sbStatus"></p>
-      </fieldset>
-      <fieldset>
         <legend>Backup dos dados</legend>
         <p class="note">Os cadastros, orçamentos e configurações ficam guardados só neste navegador ou aparelho. Para passar do PC para o celular, ou para não perder nada, copie o backup e guarde o texto (num bloco de notas ou mandando para você mesmo no WhatsApp). Para restaurar, cole o texto no campo abaixo.</p>
         <div class="cad-acoes"><button type="button" id="btnBackup">Copiar backup</button></div>
@@ -871,6 +842,26 @@ details.cat[open] > summary { border-bottom: 1px solid var(--line); }
       </fieldset>
     </form>
   </section>
+</div>
+
+<div class="modal" id="sbModal" hidden role="dialog" aria-modal="true" aria-labelledby="sbTitulo">
+  <form class="modal-card" id="sbForm" autocomplete="on">
+    <h2 id="sbTitulo">Entrar no Custo 3D</h2>
+    <p class="hint" style="margin:0;justify-self:start">Entre uma vez neste aparelho. Depois disso tudo o que você salvar vai sozinho para a nuvem.</p>
+    <div class="f" style="width:100%">
+      <label for="sbEmail">E-mail</label>
+      <div class="inp"><input id="sbEmail" type="email" autocomplete="username" required></div>
+    </div>
+    <div class="f" style="width:100%">
+      <label for="sbSenha">Senha</label>
+      <div class="inp"><input id="sbSenha" type="password" autocomplete="current-password" required></div>
+    </div>
+    <div class="actions" style="justify-self:start">
+      <button type="submit" class="primary" id="btnSbEntrar">Entrar</button>
+      <button type="button" id="btnSbAgoraNao">Agora não</button>
+    </div>
+    <span class="toast" id="toastSb" role="status" style="justify-self:start"></span>
+  </form>
 </div>
 
 <div class="modal" id="etqModal" hidden role="dialog" aria-modal="true" aria-labelledby="etqTitulo">

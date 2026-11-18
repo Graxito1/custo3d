@@ -9,7 +9,6 @@
 (function () {
   "use strict";
   const P = "calc3d-";                       // prefixo das chaves que vão para a nuvem
-  const CFG = "c3dsync-cfg";                 // { url, chave }
   const SES = "c3dsync-sessao";              // sessão do Supabase Auth
   const USR = "c3dsync-usuario";             // id do usuário já sincronizado neste aparelho
   const FILA = "c3dsync-fila";               // alterações ainda não enviadas
@@ -25,7 +24,12 @@
   const gravarJ = (k, v) => { try { origSet.call(ls, k, JSON.stringify(v)); } catch (e) {} };
   const apagar = (k) => { try { origRem.call(ls, k); } catch (e) {} };
 
-  let cfg = lerJ(CFG, null);
+  // Projeto Supabase fixo (a chave publishable é pública por natureza;
+  // quem protege os dados é o login + as regras RLS da tabela)
+  const cfg = {
+    url: "https://jdhwwwhqikovgfwgcixw.supabase.co",
+    chave: "sb_publishable_4aYwTogzqnONSlO83eIxUQ_FHZ-kMNX"
+  };
   let sessao = lerJ(SES, null);
   let fila = lerJ(FILA, {});
   let meta = lerJ(META, {});
@@ -102,7 +106,7 @@
     } catch (e) {
       if (!e.offline && (e.status === 400 || e.status === 401)) {
         sessao = null; apagar(SES);
-        const x = new Error("Sessão expirada. Entre de novo em Minha empresa → Nuvem."); x.sessao = true; throw x;
+        abrirLogin(); const x = new Error("Sessão expirada. Toque em ☁ para entrar de novo."); x.sessao = true; throw x;
       }
       throw e;
     }
@@ -223,32 +227,34 @@
   // ---------- Tela ----------
   function status(msg, tipo) {
     const chip = $("nuvemChip"), st = $("sbStatus");
-    if (chip) { chip.hidden = !configurado(); chip.textContent = "☁ " + msg; chip.className = "nuvem" + (tipo ? " " + tipo : ""); }
+    if (chip) { chip.hidden = false; chip.textContent = "☁ " + msg; chip.className = "nuvem" + (tipo ? " " + tipo : ""); }
     if (st) st.textContent = msg;
   }
   function statusFila() {
     const n = Object.keys(fila).length;
     if (!logado()) {
-      status(configurado() ? (vinculado() ? "Desconectado — entre de novo para sincronizar" : "Não conectado") : "", "erro");
+      status("Não conectado · toque para entrar", "erro");
       return;
     }
     if (n) status((semRede ? "Sem conexão · " : "") + n + (n === 1 ? " alteração" : " alterações") + " aguardando envio", semRede ? "erro" : "");
-    const st = $("sbStatus");
-    if (st) st.textContent = "Conectado como " + sessao.user.email + (n ? " · " + n + " pendente(s)" : " · tudo sincronizado");
   }
   function aviso(msg) { const el = $("toastSb"); if (!el) return; el.textContent = msg; clearTimeout(el._t); el._t = setTimeout(() => (el.textContent = ""), 3500); }
 
-  function ligarTela() {
-    if (cfg) { $("sbUrl").value = cfg.url || ""; $("sbChave").value = cfg.chave || ""; }
-    if (sessao && sessao.user) $("sbEmail").value = sessao.user.email;
+  function abrirLogin() {
+    const m = $("sbModal"); if (!m || !m.hidden) return;
+    if (sessao && sessao.user && !$("sbEmail").value) $("sbEmail").value = sessao.user.email;
+    m.hidden = false;
+    setTimeout(() => ($("sbEmail").value ? $("sbSenha") : $("sbEmail")).focus(), 50);
+  }
+  function fecharLogin() { const m = $("sbModal"); if (m) m.hidden = true; }
 
-    $("btnSbEntrar").addEventListener("click", async () => {
-      const url = $("sbUrl").value.trim().replace(/\/+$/, ""), chave = $("sbChave").value.trim();
+  function ligarTela() {
+    $("sbForm").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
       const email = $("sbEmail").value.trim(), senha = $("sbSenha").value;
-      if (!/^https?:\/\/.+/.test(url) || !chave) { aviso("Preencha a URL e a chave do projeto"); return; }
       if (!email || !senha) { aviso("Preencha e-mail e senha"); return; }
-      cfg = { url, chave }; gravarJ(CFG, cfg);
-      aviso("Conectando…");
+      aviso("Entrando…");
+      $("btnSbEntrar").disabled = true;
       try {
         const r = await req("/auth/v1/token?grant_type=password", { method: "POST", body: JSON.stringify({ email, password: senha }) }, false);
         const trocouConta = sessao && sessao.user && sessao.user.id !== r.user.id;
@@ -258,27 +264,29 @@
         await puxar();
         pronto = true;
         await enviar();
-        aviso("Conectado. Recarregando…");
-        setTimeout(() => location.reload(), 900);
+        aviso("Pronto! Recarregando…");
+        setTimeout(() => location.reload(), 700);
       } catch (e) {
         aviso(/invalid login|invalid_grant/i.test(e.message) ? "E-mail ou senha incorretos" : e.message);
+      } finally { $("btnSbEntrar").disabled = false; }
+    });
+    $("btnSbAgoraNao").addEventListener("click", fecharLogin);
+
+    // ☁ no topo: sem login abre a tela de entrar; logado sincroniza agora ou sai da conta
+    const chip = $("nuvemChip");
+    const clicarChip = async () => {
+      if (!logado()) { abrirLogin(); return; }
+      const n = Object.keys(fila).length;
+      if (!confirm("Conectado como " + sessao.user.email + (n ? " (" + n + " pendente(s))" : " (tudo sincronizado)") +
+        ".\n\nOK = sincronizar agora\nCancelar = continuar")) {
+        return;
       }
-    });
-
-    $("btnSbSinc").addEventListener("click", async () => {
-      if (!logado()) { aviso("Conecte primeiro"); return; }
-      aviso("Sincronizando…");
-      try { pronto = true; await enviar(); await puxar(); aviso("Pronto. Recarregando…"); setTimeout(() => location.reload(), 700); }
-      catch (e) { aviso(e.message); }
-    });
-
-    $("btnSbSair").addEventListener("click", async () => {
-      if (Object.keys(fila).length && !confirm("Ainda há alterações não enviadas para a nuvem. Desconectar mesmo assim?")) return;
-      try { if (logado()) await req("/auth/v1/logout", { method: "POST" }); } catch (e) {}
-      sessao = null; apagar(SES); apagar(USR); fila = {}; meta = {}; gravarJ(FILA, fila); gravarJ(META, meta);
-      aviso("Desconectado. Os dados continuam neste aparelho.");
-      statusFila();
-    });
+      status("Sincronizando…", "");
+      try { pronto = true; await enviar(); await puxar(); status("Nuvem sincronizada", "ok"); setTimeout(() => location.reload(), 500); }
+      catch (e) { status(e.message, "erro"); }
+    };
+    chip.addEventListener("click", clicarChip);
+    chip.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); clicarChip(); } });
 
     window.addEventListener("online", () => { if (logado()) { pronto = true; agendar(500); } });
   }
@@ -300,5 +308,6 @@
   } else {
     statusFila();
     abrirApp();
+    abrirLogin();
   }
 })();
