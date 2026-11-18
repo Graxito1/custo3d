@@ -248,6 +248,17 @@
   }
   function fecharLogin() { const m = $("sbModal"); if (m) m.hidden = true; }
 
+  async function sair() {
+    status("Enviando alterações…", "");
+    try { pronto = true; await enviar(); } catch (e) {}
+    const n = Object.keys(fila).length;
+    if (n && !confirm(n + " alteração(ões) ainda não foram para a nuvem e serão perdidas. Sair mesmo assim?")) { statusFila(); return; }
+    try { await req("/auth/v1/logout", { method: "POST" }); } catch (e) {}
+    chavesLocais().forEach(apagar);
+    [SES, USR, FILA, META].forEach(apagar);
+    location.reload();
+  }
+
   function ligarTela() {
     $("sbForm").addEventListener("submit", async (ev) => {
       ev.preventDefault();
@@ -270,20 +281,13 @@
         aviso(/invalid login|invalid_grant/i.test(e.message) ? "E-mail ou senha incorretos" : e.message);
       } finally { $("btnSbEntrar").disabled = false; }
     });
-    $("btnSbAgoraNao").addEventListener("click", fecharLogin);
 
     // ☁ no topo: sem login abre a tela de entrar; logado sincroniza agora ou sai da conta
     const chip = $("nuvemChip");
     const clicarChip = async () => {
       if (!logado()) { abrirLogin(); return; }
-      const n = Object.keys(fila).length;
-      if (!confirm("Conectado como " + sessao.user.email + (n ? " (" + n + " pendente(s))" : " (tudo sincronizado)") +
-        ".\n\nOK = sincronizar agora\nCancelar = continuar")) {
-        return;
-      }
-      status("Sincronizando…", "");
-      try { pronto = true; await enviar(); await puxar(); status("Nuvem sincronizada", "ok"); setTimeout(() => location.reload(), 500); }
-      catch (e) { status(e.message, "erro"); }
+      if (!confirm("Conectado como " + sessao.user.email + ".\n\nOK = sair da conta (os dados deste aparelho são apagados; continuam na nuvem)\nCancelar = continuar usando")) return;
+      sair();
     };
     chip.addEventListener("click", clicarChip);
     chip.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); clicarChip(); } });
@@ -306,8 +310,8 @@
       .catch((e) => status(e.sessao ? e.message : (e.offline ? "Sem conexão — usando dados deste aparelho" : "Erro: " + e.message), "erro"))
       .finally(() => { pronto = true; abrirApp(); statusFila(); enviar(); });
   } else {
+    // sem login o sistema não abre
     statusFila();
-    abrirApp();
     abrirLogin();
   }
 })();
