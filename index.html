@@ -315,6 +315,13 @@ button.perigo.confirmar { background: var(--c-fal); color: #fff; border-color: v
 .kpi b { font-family: var(--font-mono); font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .kpi.receber b { color: var(--c-fal); }
 .filtros { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 10px; }
+.lista-toggle { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--field); color: var(--ink); font: inherit; font-weight: 600; font-size: 14px; cursor: pointer; text-align: left; }
+.lista-toggle:hover { border-color: var(--accent, #d9601a); }
+.lista-toggle .seta { display: inline-block; transition: transform .2s; font-size: 12px; color: var(--muted); }
+.lista-toggle[aria-expanded="false"] .seta { transform: rotate(-90deg); }
+.lista-toggle .conta { margin-left: auto; color: var(--muted); font-weight: 500; font-size: 13px; }
+.ped-lista { display: grid; gap: 14px; }
+.ped-lista[hidden] { display: none; }
 @media (max-width: 600px) { .filtros { grid-template-columns: 1fr 1fr; } .filtros .busca { grid-column: 1 / -1; } }
 .tbl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
 .tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 760px; }
@@ -736,6 +743,8 @@ details.cat[open] > summary { border-bottom: 1px solid var(--line); }
         <div class="kpi"><span>Lucro</span><b id="kLuc">R$ 0,00</b></div>
         <div class="kpi receber"><span>A receber</span><b id="kRec">R$ 0,00</b></div>
       </div>
+      <button type="button" class="lista-toggle" id="btnTogglePed" aria-expanded="false" aria-controls="pedLista"><span class="seta" aria-hidden="true">▼</span> Lista de pedidos <span class="conta" id="pedConta"></span></button>
+      <div class="ped-lista" id="pedLista" hidden>
       <div class="filtros">
         <div class="inp"><select id="fStatus" aria-label="Filtrar por status"><option value="">Todos os status</option><option value="abertos">Em aberto (não entregues)</option></select></div>
         <div class="inp"><select id="fMes" aria-label="Filtrar por mês"><option value="">Todos os meses</option></select></div>
@@ -748,6 +757,7 @@ details.cat[open] > summary { border-bottom: 1px solid var(--line); }
         </table>
       </div>
       <p class="empty" id="pedVazio">Nenhum pedido ainda. No Orçamento, escolha o cliente, calcule e clique em <b>Registrar pedido</b>.</p>
+      </div>
       <span class="toast" id="toastPed" role="status"></span>
     </div>
 
@@ -1700,7 +1710,15 @@ window.iniciarCusto3D = function () {
       ? "Nenhum pedido com esses filtros."
       : "Nenhum pedido ainda. No Orçamento, escolha o cliente, calcule e clique em <b>Registrar pedido</b>.";
     $("pedidos").querySelector(".tbl-wrap").hidden = lista.length === 0;
+    $("pedConta").textContent = lista.length === pedidos.length ? `${pedidos.length} pedido${pedidos.length === 1 ? "" : "s"}` : `${lista.length} de ${pedidos.length}`;
   }
+  function abrirListaPed(aberta) {
+    $("pedLista").hidden = !aberta;
+    $("btnTogglePed").setAttribute("aria-expanded", String(aberta));
+    try { localStorage.setItem("c3dui-lista-pedidos", aberta ? "1" : "0"); } catch (e) {}
+  }
+  $("btnTogglePed").addEventListener("click", () => abrirListaPed($("pedLista").hidden));
+  try { abrirListaPed(localStorage.getItem("c3dui-lista-pedidos") === "1"); } catch (e) {}
 
   function renderPedidosCli() {
     const box = $("cliPedBox");
