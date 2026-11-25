@@ -385,6 +385,55 @@ details.cat[open] > summary { border-bottom: 1px solid var(--line); }
 .cat-lista button { padding: 4px 8px; font-size: 12px; font-weight: 500; }
 .chip { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--field); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
 .linkbtn { background: none; border: 0; padding: 0; color: var(--accent); font-weight: 600; font-size: 13px; cursor: pointer; text-decoration: underline; }
+/* Estoque */
+.kpi.alerta b { color: var(--c-fal); }
+.leitor { border: 2px solid var(--c-fal); border-radius: 10px; padding: 14px; display: grid; gap: 12px; background: color-mix(in srgb, var(--c-fal) 5%, var(--panel)); }
+.leitor[data-modo="entrada"] { border-color: var(--c-ext); background: color-mix(in srgb, var(--c-ext) 5%, var(--panel)); }
+.leitor-top { display: flex; gap: 10px 14px; align-items: center; flex-wrap: wrap; }
+.leitor-top .hint { flex: 1; min-width: 200px; }
+.leitor-modo { width: 220px; }
+.leitor-modo input[value="saida"]:checked + span { background: color-mix(in srgb, var(--c-fal) 22%, transparent); color: var(--ink); font-weight: 700; }
+.leitor-modo input[value="entrada"]:checked + span { background: color-mix(in srgb, var(--c-ext) 22%, transparent); color: var(--ink); font-weight: 700; }
+.leitor-campos { display: grid; grid-template-columns: minmax(0, 2fr) 110px minmax(0, 1.4fr) auto; gap: 10px; align-items: end; }
+.leitor-campos .inp { background: var(--panel); }
+.leitor-campos .cod input { font-size: 18px; letter-spacing: .04em; }
+.leitor-btns { display: flex; gap: 8px; }
+@media (max-width: 760px) { .leitor-campos { grid-template-columns: minmax(0, 1fr) 100px; } .leitor-campos .cod, .leitor-campos .obs, .leitor-btns { grid-column: 1 / -1; } .leitor-btns button { flex: 1; } }
+.scan-res { font-size: 15px; font-weight: 600; padding: 10px 12px; border-radius: 8px; width: 100%; box-sizing: border-box; }
+.scan-res.ok { background: color-mix(in srgb, var(--c-ext) 16%, transparent); color: var(--ink); border-left: 4px solid var(--c-ext); }
+.scan-res.erro { background: color-mix(in srgb, var(--c-fal) 14%, transparent); color: var(--ink); border-left: 4px solid var(--c-fal); }
+.scan-res .linkbtn { margin-left: 8px; }
+.tbl tr.baixo td.saldo { color: var(--c-fal); font-weight: 700; }
+.tbl .cod { font-family: var(--font-mono); font-size: 13px; white-space: nowrap; }
+.chip.ent { color: var(--c-ext); border-color: var(--c-ext); }
+.chip.sai { color: var(--c-fal); border-color: var(--c-fal); }
+.chip.alerta { color: var(--c-fal); border-color: var(--c-fal); }
+.inp .dentro { border: 0; border-left: 1px solid var(--line); border-radius: 0; padding: 0 12px; font-size: 13px; background: transparent; }
+.man-form { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) 100px minmax(0, 1fr) minmax(0, 1.4fr) auto; gap: 10px; align-items: end; }
+@media (max-width: 760px) { .man-form { grid-template-columns: 1fr 1fr; } .man-form .prod, .man-form > button { grid-column: 1 / -1; } }
+#camVideo { width: 100%; max-height: 55vh; border-radius: 8px; background: #000; object-fit: cover; }
+/* Etiquetas de código de barras */
+#lblPrint { display: flex; flex-wrap: wrap; gap: 3mm; justify-content: center; max-width: 100%; }
+.lbl {
+  width: 50mm; height: 30mm; box-sizing: border-box; padding: 1.5mm 2.5mm; background: #ffffff; color: #000000;
+  font-family: Arial, Helvetica, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: .6mm; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.25);
+}
+.lbl .ln { font-size: 7.5pt; font-weight: 700; text-align: center; line-height: 1.15; max-height: 2.3em; overflow: hidden; }
+.lbl svg { display: block; width: 100%; height: 13mm; }
+.lbl .lc { font-family: "Courier New", monospace; font-size: 8.5pt; letter-spacing: .1em; }
+#lblPrint.t40 .lbl { width: 40mm; height: 25mm; padding: 1mm 2mm; }
+#lblPrint.t40 .lbl svg { height: 10.5mm; }
+#lblPrint.t40 .lbl .ln { font-size: 6.5pt; }
+#lblPrint.a4 { display: grid; grid-template-columns: repeat(3, 63mm); gap: 0; justify-content: start; }
+#lblPrint.a4 .lbl { width: 63mm; height: 30mm; box-shadow: none; outline: .2mm dashed #bbbbbb; outline-offset: -.1mm; }
+@media screen and (max-width: 440px) { #lblPrint.a4 { zoom: .55; } }
+@media print {
+  #lblPrint { gap: 0; }
+  #lblPrint:not(.a4) { display: block; }
+  #lblPrint .lbl { box-shadow: none; }
+  #lblPrint:not(.a4) .lbl { break-after: page; page-break-after: always; }
+}
 @media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
 </style>
 </head>
@@ -773,6 +822,146 @@ details.cat[open] > summary { border-bottom: 1px solid var(--line); }
       <span class="toast" id="toastDesp" role="status"></span>
     </div>
 
+    <div class="pedidos" id="estoque">
+      <div class="ped-top">
+        <h2>Estoque</h2>
+        <button type="button" id="btnCopiarEst">Copiar estoque para planilha</button>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><span>Produtos</span><b id="eKProd">0</b></div>
+        <div class="kpi"><span>Itens em estoque</span><b id="eKItens">0</b></div>
+        <div class="kpi" id="eKBaixoBox"><span>Abaixo do mínimo</span><b id="eKBaixo">0</b></div>
+        <div class="kpi"><span>Valor em estoque</span><b id="eKValor">R$ 0,00</b></div>
+      </div>
+
+      <div class="leitor" id="leitor" data-modo="saida">
+        <div class="leitor-top">
+          <div class="seg leitor-modo" role="radiogroup" aria-label="Tipo de movimento">
+            <label><input type="radio" name="eModo" value="saida" checked><span>Saída</span></label>
+            <label><input type="radio" name="eModo" value="entrada"><span>Entrada</span></label>
+          </div>
+          <span class="hint">Passe o leitor de código de barras no campo abaixo (ou digite o código e aperte Enter). No celular, use a câmera.</span>
+        </div>
+        <div class="leitor-campos">
+          <div class="f cod">
+            <label for="eScan">Código de barras</label>
+            <div class="inp"><input id="eScan" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done" placeholder="Leia ou digite o código"></div>
+          </div>
+          <div class="f">
+            <label for="eScanQtd">Quantidade</label>
+            <div class="inp"><input id="eScanQtd" type="number" min="1" step="1" value="1"></div>
+          </div>
+          <div class="f obs">
+            <label for="eScanObs">Observação (opcional)</label>
+            <div class="inp"><input id="eScanObs" type="text" placeholder="Ex.: pedido #0012"></div>
+          </div>
+          <div class="leitor-btns">
+            <button type="button" class="primary" id="btnScanOk">Registrar</button>
+            <button type="button" id="btnCamera">📷 Câmera</button>
+          </div>
+        </div>
+        <div class="scan-res" id="scanRes" role="status" aria-live="polite" hidden></div>
+      </div>
+
+      <details class="cat" id="eCad">
+        <summary id="eCadTit">Cadastrar produto no estoque</summary>
+        <div class="cat-corpo">
+          <p class="hint" style="margin:0">Deixe o código vazio para o sistema criar um (JR00001, JR00002…) e imprima a etiqueta. Se o produto já vem com código de barras (filamento, embalagem), passe o leitor no campo Código.</p>
+          <div class="row">
+            <div class="f span2">
+              <label for="ePNome">Nome do produto</label>
+              <div class="inp"><input id="ePNome" type="text" placeholder="Ex.: Chaveiro dragão vermelho"></div>
+            </div>
+            <div class="f span2">
+              <label for="ePCod">Código de barras</label>
+              <div class="inp"><input id="ePCod" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Automático"><button type="button" class="dentro" id="btnGerarCod">Gerar</button></div>
+            </div>
+            <div class="f">
+              <label for="ePUn">Unidade</label>
+              <div class="inp"><select id="ePUn"><option value="un">Unidade (un)</option><option value="pç">Peça (pç)</option><option value="kg">Quilo (kg)</option><option value="g">Grama (g)</option><option value="rolo">Rolo</option><option value="m">Metro (m)</option><option value="cx">Caixa (cx)</option><option value="pct">Pacote (pct)</option></select></div>
+            </div>
+            <div class="f">
+              <label for="ePMin">Estoque mínimo</label>
+              <div class="inp"><input id="ePMin" type="number" min="0" step="1" placeholder="0"></div>
+              <span class="hint">Avisa quando chegar nele</span>
+            </div>
+            <div class="f">
+              <label for="ePCusto">Custo unitário</label>
+              <div class="inp"><span>R$</span><input id="ePCusto" type="number" min="0" step="0.01"></div>
+            </div>
+            <div class="f" id="ePIniBox">
+              <label for="ePIni">Quantidade que já tem</label>
+              <div class="inp"><input id="ePIni" type="number" min="0" step="1" placeholder="0"></div>
+            </div>
+          </div>
+          <div class="cad-acoes">
+            <button type="button" class="primary" id="btnSalvarEProd">Cadastrar produto</button>
+            <button type="button" id="btnCancelarEProd" hidden>Cancelar</button>
+          </div>
+        </div>
+      </details>
+
+      <div class="filtros dois">
+        <div class="inp"><input id="eBusca" type="search" placeholder="Buscar produto ou código" aria-label="Buscar no estoque"></div>
+        <div class="inp"><select id="eFiltro" aria-label="Filtrar estoque"><option value="">Todos os produtos</option><option value="baixo">Abaixo do mínimo</option><option value="zerado">Sem estoque</option></select></div>
+      </div>
+      <div class="tbl-wrap" id="eWrap">
+        <table class="tbl" style="min-width: 680px">
+          <thead><tr><th>Código</th><th>Produto</th><th style="text-align:right">Saldo</th><th style="text-align:right">Mínimo</th><th style="text-align:right">Custo un.</th><th></th></tr></thead>
+          <tbody id="eBody"></tbody>
+        </table>
+      </div>
+      <p class="empty" id="eVazio"></p>
+
+      <details class="cat" id="eMan">
+        <summary>Lançar sem código de barras</summary>
+        <div class="cat-corpo">
+          <div class="man-form">
+            <div class="f prod">
+              <label for="eMProd">Produto</label>
+              <div class="inp"><select id="eMProd"></select></div>
+            </div>
+            <div class="f">
+              <label for="eMTipo">Tipo</label>
+              <div class="inp"><select id="eMTipo"><option value="entrada">Entrada</option><option value="saida">Saída</option></select></div>
+            </div>
+            <div class="f">
+              <label for="eMQtd">Quantidade</label>
+              <div class="inp"><input id="eMQtd" type="number" min="0" step="1" value="1"></div>
+            </div>
+            <div class="f">
+              <label for="eMData">Data</label>
+              <div class="inp"><input id="eMData" type="date"></div>
+            </div>
+            <div class="f">
+              <label for="eMObs">Observação</label>
+              <div class="inp"><input id="eMObs" type="text" placeholder="Opcional"></div>
+            </div>
+            <button type="button" class="primary" id="btnEMLancar">Lançar</button>
+          </div>
+        </div>
+      </details>
+
+      <details class="cat" id="eMovs">
+        <summary>Movimentações <span class="cnt" id="eCntMov"></span></summary>
+        <div class="cat-corpo">
+          <div class="filtros" style="grid-template-columns: 1fr 1fr auto">
+            <div class="inp"><select id="eMesM" aria-label="Filtrar movimentações por mês"></select></div>
+            <div class="inp"><select id="eTipoM" aria-label="Filtrar por tipo"><option value="">Entradas e saídas</option><option value="entrada">Só entradas</option><option value="saida">Só saídas</option></select></div>
+            <button type="button" id="btnCopiarMov">Copiar para planilha</button>
+          </div>
+          <div class="tbl-wrap" id="eMovWrap">
+            <table class="tbl" style="min-width: 640px">
+              <thead><tr><th>Data</th><th>Tipo</th><th>Produto</th><th style="text-align:right">Qtd</th><th>Observação</th><th></th></tr></thead>
+              <tbody id="eMovBody"></tbody>
+            </table>
+          </div>
+          <p class="empty" id="eMovVazio">Nenhuma movimentação neste período.</p>
+        </div>
+      </details>
+      <span class="toast" id="toastEst" role="status"></span>
+    </div>
+
     <form class="blocks" id="formEmp" autocomplete="off" style="max-width: 820px">
       <fieldset>
         <legend>Dados da empresa</legend>
@@ -888,6 +1077,41 @@ details.cat[open] > summary { border-bottom: 1px solid var(--line); }
       <span class="toast" id="toastEtq" role="status"></span>
     </div>
     <div class="etq-wrap"><div id="etqPrint"></div></div>
+  </div>
+</div>
+<div class="modal" id="camModal" hidden role="dialog" aria-modal="true" aria-labelledby="camTit">
+  <div class="modal-card">
+    <h2 id="camTit">Ler código pela câmera</h2>
+    <p class="hint" id="camModo" style="margin:0;justify-self:start"></p>
+    <video id="camVideo" playsinline muted></video>
+    <div class="scan-res" id="camRes" aria-live="polite" hidden></div>
+    <p class="hint" style="margin:0;justify-self:start">Aponte para o código. Para registrar o mesmo produto de novo, tire o código da frente da câmera e aponte outra vez.</p>
+    <div class="actions" style="justify-self:start"><button type="button" class="primary" id="camFechar">Fechar câmera</button></div>
+  </div>
+</div>
+
+<div class="modal" id="lblModal" hidden role="dialog" aria-modal="true" aria-labelledby="lblTit">
+  <div class="modal-card">
+    <h2 id="lblTit">Etiquetas de código de barras</h2>
+    <div class="etq-ctrl">
+      <p class="hint" id="lblProd" style="margin:0"></p>
+      <div class="row">
+        <div class="f">
+          <label for="lblQtd">Quantas etiquetas</label>
+          <div class="inp"><input id="lblQtd" type="number" min="1" max="300" step="1" value="1"></div>
+        </div>
+        <div class="f">
+          <label for="lblTam">Papel</label>
+          <div class="inp"><select id="lblTam"><option value="t50">Etiqueta 50 × 30 mm</option><option value="t40">Etiqueta 40 × 25 mm</option><option value="a4">Folha A4 (3 por linha)</option></select></div>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="button" class="primary" id="lblImprimir">Imprimir</button>
+        <button type="button" id="lblFechar">Fechar</button>
+      </div>
+      <p class="hint" id="lblSemImpressao" hidden style="margin:0">Para imprimir, abra o Custo 3D instalado no PC ou o app do celular.</p>
+    </div>
+    <div class="etq-wrap"><div id="lblPrint"></div></div>
   </div>
 </div>
 <style id="etqPage">@page { size: 100mm 150mm; margin: 0; }</style>
@@ -1311,7 +1535,7 @@ window.iniciarCusto3D = function () {
   // Backup
   $("btnBackup").addEventListener("click", () => {
     const dados = {};
-    [KEY, LKEY, EKEY, CKEY, EMKEY, OKEY, DPKEY, DKEY].forEach((k) => { const v = load(k, null); if (v !== null) dados[k] = v; });
+    [KEY, LKEY, EKEY, CKEY, EMKEY, OKEY, DPKEY, DKEY, EPKEY, EMVKEY].forEach((k) => { const v = load(k, null); if (v !== null) dados[k] = v; });
     chavesImagens().forEach((k) => { const v = load(k, null); if (v) dados[k] = v; });
     copiar(JSON.stringify({ app: "custo3d", versao: 1, dados }), "Backup copiado. Guarde esse texto.", (m) => avisoEm("toastBkp", m));
   });
@@ -1661,8 +1885,346 @@ window.iniciarCusto3D = function () {
   $("dData").value = hojeISO();
   limparFormProd();
 
+  // ---------- Estoque ----------
+  const EPKEY = "calc3d-estoque-produtos-v1", EMVKEY = "calc3d-estoque-mov-v1";
+  let eprod = load(EPKEY, []);
+  let emov = load(EMVKEY, []);
+  let editEProd = null;
+  const normCod = (s) => String(s || "").trim().toUpperCase();
+  const fmtQtd = (n) => String(Math.round((+n || 0) * 1000) / 1000).replace(".", ",");
+  const modoLeitor = () => (document.querySelector('input[name="eModo"]:checked') || {}).value || "saida";
+  const n0 = (v) => { const x = parseFloat(String(v).replace(",", ".")); return isFinite(x) && x > 0 ? x : 0; };
+
+  function saldos() {
+    const s = {};
+    emov.forEach((m) => { s[m.prodId] = (s[m.prodId] || 0) + (m.tipo === "entrada" ? m.qtd : -m.qtd); });
+    return s;
+  }
+  const saldoDe = (id) => saldos()[id] || 0;
+  const prodPorCodigo = (c) => { const n = normCod(c); return n ? eprod.find((p) => normCod(p.codigo) === n) || null : null; };
+  function proximoCodigo() {
+    const n = eprod.reduce((m, p) => { const r = /^JR(\d+)$/.exec(normCod(p.codigo)); return r ? Math.max(m, +r[1]) : m; }, 0) + 1;
+    return "JR" + String(n).padStart(5, "0");
+  }
+  function salvarEstoque() { save(EPKEY, eprod); save(EMVKEY, emov); renderEstoque(); }
+
+  // Code 128 (conjunto B): letras, números e símbolos
+  function barrasTexto(txt) {
+    const s = String(txt || "");
+    if (!s || [...s].some((ch) => ch.charCodeAt(0) < 32 || ch.charCodeAt(0) > 126)) return "";
+    const v = [104, ...[...s].map((ch) => ch.charCodeAt(0) - 32)];
+    let ck = v[0]; for (let i = 1; i < v.length; i++) ck += v[i] * i;
+    v.push(ck % 103, 106);
+    let x = 10, rects = "";
+    v.forEach((w) => [...C128[w]].forEach((n, i) => { if (i % 2 === 0) rects += `<rect x="${x}" y="0" width="${n}" height="40"/>`; x += +n; }));
+    return `<svg viewBox="0 0 ${x + 10} 40" preserveAspectRatio="none" role="img" aria-label="Código de barras ${esc(s)}"><rect x="0" y="0" width="${x + 10}" height="40" fill="#ffffff"/><g fill="#000000">${rects}</g></svg>`;
+  }
+
+  let actx = null;
+  function bip(ok) {
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.frequency.value = ok ? 1250 : 280; g.gain.value = 0.08;
+      o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime + (ok ? 0.09 : 0.35));
+    } catch (e) {}
+    try { if (navigator.vibrate) navigator.vibrate(ok ? 40 : [120, 60, 120]); } catch (e) {}
+  }
+
+  function movimentar(p, tipo, qtd, obs, dataISO) {
+    if (tipo === "saida") {
+      const s = saldoDe(p.id);
+      if (s < qtd) return { ok: false, msg: `Estoque insuficiente: ${p.nome} tem ${fmtQtd(s)} ${p.un}. Lance a entrada antes.` };
+    }
+    emov.push({ id: "m" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), data: dataISO || new Date().toISOString(), prodId: p.id, nome: p.nome, codigo: p.codigo, tipo, qtd, obs: obs || "" });
+    salvarEstoque();
+    const s = saldoDe(p.id);
+    const baixo = p.min > 0 && s <= p.min;
+    return { ok: true, msg: `${tipo === "saida" ? "Saída" : "Entrada"}: ${p.nome} · ${tipo === "saida" ? "−" : "+"}${fmtQtd(qtd)} · saldo ${fmtQtd(s)} ${p.un}${baixo ? " · ⚠ abaixo do mínimo" : ""}` };
+  }
+
+  function resultado(el, ok, msg, codNovo) {
+    el.hidden = false; el.className = "scan-res " + (ok ? "ok" : "erro");
+    el.innerHTML = (ok ? "✓ " : "✕ ") + esc(msg) + (codNovo ? ` <button type="button" class="linkbtn" data-novo-cod="${esc(codNovo)}">Cadastrar este código</button>` : "");
+  }
+
+  function lerCodigo(cod) {
+    const c = normCod(cod);
+    if (!c) return null;
+    const p = prodPorCodigo(c);
+    let r;
+    if (!p) r = { ok: false, msg: `Código ${c} não está cadastrado.`, novo: c };
+    else r = movimentar(p, modoLeitor(), Math.max(1, n0($("eScanQtd").value) || 1), $("eScanObs").value.trim());
+    resultado($("scanRes"), r.ok, r.msg, r.novo);
+    bip(r.ok);
+    if (r.ok) $("eScanQtd").value = 1;
+    return r;
+  }
+
+  function renderEstoque() {
+    const s = saldos();
+    const q = $("eBusca").value.trim().toLowerCase(), fil = $("eFiltro").value;
+    const ord = [...eprod].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+    const baixos = eprod.filter((p) => p.min > 0 && (s[p.id] || 0) <= p.min);
+    $("eKProd").textContent = eprod.length;
+    $("eKItens").textContent = fmtQtd(eprod.reduce((a, p) => a + Math.max(0, s[p.id] || 0), 0));
+    $("eKBaixo").textContent = baixos.length;
+    $("eKBaixoBox").classList.toggle("alerta", baixos.length > 0);
+    $("eKValor").textContent = brl(eprod.reduce((a, p) => a + Math.max(0, s[p.id] || 0) * (p.custo || 0), 0));
+
+    const lista = ord.filter((p) => {
+      const sd = s[p.id] || 0;
+      if (fil === "baixo" && !(p.min > 0 && sd <= p.min)) return false;
+      if (fil === "zerado" && sd > 0) return false;
+      return !q || p.nome.toLowerCase().includes(q) || normCod(p.codigo).includes(normCod(q));
+    });
+    $("eBody").innerHTML = lista.map((p) => {
+      const sd = s[p.id] || 0, baixo = p.min > 0 && sd <= p.min;
+      return `<tr data-id="${p.id}" class="${baixo ? "baixo" : ""}">
+        <td class="cod">${esc(p.codigo)}</td>
+        <td>${esc(p.nome)}${baixo ? ` <span class="chip alerta">${sd <= 0 ? "sem estoque" : "repor"}</span>` : ""}</td>
+        <td class="money saldo">${fmtQtd(sd)} <small style="display:inline">${esc(p.un)}</small></td>
+        <td class="money">${p.min ? fmtQtd(p.min) : "—"}</td>
+        <td class="money">${p.custo ? brl(p.custo) : "—"}</td>
+        <td class="acoes"><button type="button" data-a="lbl">Etiqueta</button><button type="button" data-a="ent">+ Entrada</button><button type="button" data-a="ed">Editar</button><button type="button" class="perigo" data-a="del">Excluir</button></td>
+      </tr>`;
+    }).join("");
+    $("eWrap").hidden = lista.length === 0;
+    $("eVazio").hidden = lista.length > 0;
+    $("eVazio").textContent = eprod.length ? "Nenhum produto com esse filtro." : "Nenhum produto no estoque ainda. Abra “Cadastrar produto no estoque” acima.";
+
+    // lançamento manual
+    const sel = $("eMProd"), atual = sel.value;
+    sel.innerHTML = `<option value="">${eprod.length ? "Selecione o produto" : "Cadastre um produto primeiro"}</option>` + ord.map((p) => `<option value="${p.id}">${esc(p.nome)} (${fmtQtd(s[p.id] || 0)} ${esc(p.un)})</option>`).join("");
+    sel.value = eprod.some((p) => p.id === atual) ? atual : "";
+
+    renderMovs();
+  }
+
+  function movsFiltradas() {
+    const mes = $("eMesM").value, tipo = $("eTipoM").value;
+    return emov.filter((m) => (!mes || mesDe(m.data) === mes) && (!tipo || m.tipo === tipo))
+      .sort((a, b) => (b.data + b.id).localeCompare(a.data + a.id));
+  }
+  function renderMovs() {
+    const selMes = $("eMesM"), mAtual = selMes.dataset.init ? selMes.value : hojeISO().slice(0, 7);
+    selMes.dataset.init = "1";
+    const meses = [...new Set([hojeISO().slice(0, 7), ...emov.map((m) => mesDe(m.data))])].filter(Boolean).sort().reverse();
+    selMes.innerHTML = `<option value="">Todos os meses</option>` + meses.map((m) => `<option value="${m}">${nomeMes(m)}</option>`).join("");
+    selMes.value = meses.includes(mAtual) || mAtual === "" ? mAtual : "";
+    const mapa = {}; eprod.forEach((p) => (mapa[p.id] = p));
+    const lista = movsFiltradas();
+    $("eCntMov").textContent = emov.length ? emov.length : "";
+    $("eMovBody").innerHTML = lista.map((m) => {
+      const p = mapa[m.prodId] || m, d = new Date(m.data);
+      return `<tr data-id="${m.id}">
+        <td class="num">${fmtData(m.data)}<small>${isNaN(d) ? "" : d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</small></td>
+        <td><span class="chip ${m.tipo === "entrada" ? "ent" : "sai"}">${m.tipo === "entrada" ? "Entrada" : "Saída"}</span></td>
+        <td>${esc(p.nome)}<small class="cod">${esc(p.codigo || "")}</small></td>
+        <td class="money">${m.tipo === "entrada" ? "+" : "−"}${fmtQtd(m.qtd)}</td>
+        <td>${esc(m.obs || "")}</td>
+        <td class="acoes"><button type="button" class="perigo" data-a="del">Excluir</button></td>
+      </tr>`;
+    }).join("");
+    $("eMovWrap").hidden = lista.length === 0;
+    $("eMovVazio").hidden = lista.length > 0;
+  }
+
+  // leitor
+  document.querySelectorAll('input[name="eModo"]').forEach((r) => r.addEventListener("change", () => {
+    $("leitor").dataset.modo = modoLeitor(); $("scanRes").hidden = true; $("eScan").focus();
+  }));
+  $("eScan").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === "Tab" && $("eScan").value.trim()) { e.preventDefault(); lerCodigo($("eScan").value); $("eScan").value = ""; }
+  });
+  $("btnScanOk").addEventListener("click", () => {
+    if (!$("eScan").value.trim()) { resultado($("scanRes"), false, "Leia ou digite um código primeiro."); $("eScan").focus(); return; }
+    lerCodigo($("eScan").value); $("eScan").value = ""; $("eScan").focus();
+  });
+  function abrirCadastroCom(cod) {
+    editEProd = null; limparFormEProd(); $("ePCod").value = cod; $("eCad").open = true;
+    $("eCad").scrollIntoView({ behavior: "smooth", block: "start" }); $("ePNome").focus();
+  }
+  $("estoque").addEventListener("click", (e) => { const b = e.target.closest("[data-novo-cod]"); if (b) abrirCadastroCom(b.dataset.novoCod); });
+
+  // câmera (Chrome no Android e no PC; leitor nativo do navegador)
+  let camStream = null, camTmr = null;
+  async function abrirCamera() {
+    if (!("BarcodeDetector" in window) || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      resultado($("scanRes"), false, "Este navegador não lê código pela câmera. Use o Google Chrome no celular, um leitor USB ou digite o código.");
+      return;
+    }
+    let det;
+    try { det = new BarcodeDetector(); } catch (e) { resultado($("scanRes"), false, "A leitura pela câmera não está disponível neste aparelho."); return; }
+    try {
+      camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+    } catch (e) {
+      resultado($("scanRes"), false, "Não consegui abrir a câmera. Permita o acesso à câmera para este site e tente de novo.");
+      return;
+    }
+    const v = $("camVideo");
+    v.srcObject = camStream; try { await v.play(); } catch (e) {}
+    $("camModo").textContent = modoLeitor() === "saida" ? "Modo: SAÍDA de mercadoria" : "Modo: ENTRADA de mercadoria";
+    $("camRes").hidden = true;
+    $("camModal").hidden = false; document.body.style.overflow = "hidden";
+    let ultimo = "";
+    const tick = async () => {
+      if (!camStream) return;
+      try {
+        const achados = v.readyState >= 2 ? await det.detect(v) : [];
+        if (!achados.length) ultimo = "";
+        else {
+          const cod = normCod(achados[0].rawValue);
+          if (cod && cod !== ultimo) {
+            ultimo = cod;
+            const r = lerCodigo(cod);
+            if (r) resultado($("camRes"), r.ok, r.msg, r.novo);
+          }
+        }
+      } catch (e) {}
+      camTmr = setTimeout(tick, 200);
+    };
+    tick();
+  }
+  function fecharCamera() {
+    clearTimeout(camTmr);
+    if (camStream) camStream.getTracks().forEach((t) => t.stop());
+    camStream = null; $("camVideo").srcObject = null;
+    $("camModal").hidden = true; document.body.style.overflow = "";
+  }
+  $("btnCamera").addEventListener("click", abrirCamera);
+  $("camFechar").addEventListener("click", fecharCamera);
+  $("camModal").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-novo-cod]");
+    if (b) { fecharCamera(); abrirCadastroCom(b.dataset.novoCod); }
+  });
+
+  // cadastro de produtos
+  function limparFormEProd() {
+    ["ePNome", "ePCod", "ePMin", "ePCusto", "ePIni"].forEach((id) => ($(id).value = ""));
+    $("ePUn").value = "un"; $("ePIniBox").hidden = false;
+    $("eCadTit").textContent = "Cadastrar produto no estoque";
+    $("btnSalvarEProd").textContent = "Cadastrar produto"; $("btnCancelarEProd").hidden = true;
+  }
+  $("btnGerarCod").addEventListener("click", () => { $("ePCod").value = proximoCodigo(); });
+  $("ePCod").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); $("ePUn").focus(); } });
+  $("btnSalvarEProd").addEventListener("click", () => {
+    const nome = $("ePNome").value.trim();
+    if (!nome) { avisoEm("toastEst", "Coloque o nome do produto"); $("ePNome").focus(); return; }
+    let codigo = normCod($("ePCod").value) || proximoCodigo();
+    if ([...codigo].some((ch) => ch.charCodeAt(0) < 32 || ch.charCodeAt(0) > 126)) { avisoEm("toastEst", "Use só letras sem acento, números e símbolos simples no código"); return; }
+    const dono = prodPorCodigo(codigo);
+    if (dono && dono.id !== editEProd) { avisoEm("toastEst", `O código ${codigo} já é do produto ${dono.nome}`); $("ePCod").focus(); return; }
+    const dados = { nome, codigo, un: $("ePUn").value, min: n0($("ePMin").value), custo: n0($("ePCusto").value) };
+    let p;
+    if (editEProd) { p = eprod.find((x) => x.id === editEProd); Object.assign(p, dados); }
+    else { p = { id: "ep" + Date.now().toString(36), ...dados }; eprod.push(p); }
+    const ini = editEProd ? 0 : n0($("ePIni").value);
+    if (ini > 0) emov.push({ id: "m" + Date.now().toString(36) + "i", data: new Date().toISOString(), prodId: p.id, nome: p.nome, codigo: p.codigo, tipo: "entrada", qtd: ini, obs: "Saldo inicial" });
+    const novo = !editEProd;
+    editEProd = null; limparFormEProd(); salvarEstoque();
+    avisoEm("toastEst", `${novo ? "Produto cadastrado" : "Produto salvo"}: ${nome} · código ${codigo}`);
+    if (novo) abrirEtiquetas(p, Math.max(1, Math.min(300, Math.round(ini) || 1)));
+  });
+  $("btnCancelarEProd").addEventListener("click", () => { editEProd = null; limparFormEProd(); $("eCad").open = false; });
+
+  $("eBody").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-a]"); if (!b) return;
+    const p = eprod.find((x) => x.id === b.closest("tr").dataset.id); if (!p) return;
+    if (b.dataset.a === "lbl") abrirEtiquetas(p, 1);
+    else if (b.dataset.a === "ent") {
+      $("eMan").open = true; $("eMProd").value = p.id; $("eMTipo").value = "entrada"; $("eMQtd").value = 1;
+      $("eMan").scrollIntoView({ behavior: "smooth", block: "start" }); $("eMQtd").focus(); $("eMQtd").select();
+    } else if (b.dataset.a === "ed") {
+      editEProd = p.id;
+      $("ePNome").value = p.nome; $("ePCod").value = p.codigo; $("ePUn").value = p.un || "un";
+      $("ePMin").value = p.min || ""; $("ePCusto").value = p.custo || ""; $("ePIniBox").hidden = true;
+      $("eCadTit").textContent = "Editar produto: " + p.nome;
+      $("btnSalvarEProd").textContent = "Salvar alterações"; $("btnCancelarEProd").hidden = false;
+      $("eCad").open = true; $("eCad").scrollIntoView({ behavior: "smooth", block: "start" }); $("ePNome").focus();
+    } else if (b.dataset.a === "del") {
+      if (!b.classList.contains("confirmar")) { b.classList.add("confirmar"); b.textContent = "Confirmar"; setTimeout(() => { b.classList.remove("confirmar"); b.textContent = "Excluir"; }, 4000); return; }
+      eprod = eprod.filter((x) => x.id !== p.id); salvarEstoque();
+      avisoEm("toastEst", "Produto removido do estoque. As movimentações antigas continuam no histórico.");
+    }
+  });
+  $("eBusca").addEventListener("input", renderEstoque);
+  $("eFiltro").addEventListener("change", renderEstoque);
+
+  // lançamento manual
+  $("btnEMLancar").addEventListener("click", () => {
+    const p = eprod.find((x) => x.id === $("eMProd").value);
+    if (!p) { avisoEm("toastEst", eprod.length ? "Selecione o produto" : "Cadastre o produto primeiro"); return; }
+    const qtd = n0($("eMQtd").value);
+    if (!qtd) { avisoEm("toastEst", "Coloque a quantidade"); $("eMQtd").focus(); return; }
+    const dia = $("eMData").value || hojeISO();
+    const quando = dia === hojeISO() ? new Date().toISOString() : new Date(dia + "T12:00:00").toISOString();
+    const r = movimentar(p, $("eMTipo").value, qtd, $("eMObs").value.trim(), quando);
+    avisoEm("toastEst", r.msg); bip(r.ok);
+    if (r.ok) { $("eMQtd").value = 1; $("eMObs").value = ""; }
+  });
+  $("eMData").value = hojeISO();
+
+  // movimentações
+  ["eMesM", "eTipoM"].forEach((id) => $(id).addEventListener("change", renderMovs));
+  $("eMovBody").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-a=del]"); if (!b) return;
+    if (!b.classList.contains("confirmar")) { b.classList.add("confirmar"); b.textContent = "Confirmar"; setTimeout(() => { b.classList.remove("confirmar"); b.textContent = "Excluir"; }, 4000); return; }
+    emov = emov.filter((m) => m.id !== b.closest("tr").dataset.id); salvarEstoque(); avisoEm("toastEst", "Movimentação excluída. O saldo foi recalculado.");
+  });
+  $("btnCopiarEst").addEventListener("click", () => {
+    const s = saldos(), n2 = (v) => (Math.round(v * 100) / 100).toFixed(2).replace(".", ",");
+    const linhas = [["Código", "Produto", "Unidade", "Saldo", "Mínimo", "Custo unitário", "Valor em estoque"].join("\t")]
+      .concat([...eprod].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")).map((p) => [p.codigo, p.nome, p.un, fmtQtd(s[p.id] || 0), fmtQtd(p.min || 0), n2(p.custo || 0), n2(Math.max(0, s[p.id] || 0) * (p.custo || 0))].join("\t")));
+    copiar(linhas.join("\n"), "Estoque copiado. Cole no Excel ou Google Planilhas.", (m) => avisoEm("toastEst", m));
+  });
+  $("btnCopiarMov").addEventListener("click", () => {
+    const mapa = {}; eprod.forEach((p) => (mapa[p.id] = p));
+    const linhas = [["Data", "Hora", "Tipo", "Código", "Produto", "Quantidade", "Observação"].join("\t")]
+      .concat(movsFiltradas().map((m) => { const p = mapa[m.prodId] || m, d = new Date(m.data); return [fmtData(m.data), isNaN(d) ? "" : d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }), m.tipo === "entrada" ? "Entrada" : "Saída", p.codigo || "", p.nome, fmtQtd(m.qtd), m.obs || ""].join("\t"); }));
+    copiar(linhas.join("\n"), "Movimentações copiadas. Cole no Excel ou Google Planilhas.", (m) => avisoEm("toastEst", m));
+  });
+
+  // etiquetas de código de barras
+  let lblProd = null;
+  const PAG_LBL = { t50: "@page { size: 50mm 30mm; margin: 0; }", t40: "@page { size: 40mm 25mm; margin: 0; }", a4: "@page { size: A4; margin: 10mm; }" };
+  function desenharEtiquetas() {
+    if (!lblProd) return;
+    const qtd = Math.max(1, Math.min(300, Math.round(n0($("lblQtd").value)) || 1));
+    const tam = $("lblTam").value;
+    const uma = `<div class="lbl"><div class="ln">${esc(lblProd.nome)}</div>${barrasTexto(lblProd.codigo)}<div class="lc">${esc(lblProd.codigo)}</div></div>`;
+    $("lblPrint").className = tam;
+    $("lblPrint").innerHTML = uma.repeat(qtd);
+    try { localStorage.setItem("calc3d-lbl-tam", tam); } catch (e) {}
+  }
+  function abrirEtiquetas(p, qtd) {
+    lblProd = p;
+    $("lblProd").textContent = `${p.nome} · código ${p.codigo}`;
+    $("lblQtd").value = qtd || 1;
+    try { const t = localStorage.getItem("calc3d-lbl-tam"); if (t && PAG_LBL[t]) $("lblTam").value = t; } catch (e) {}
+    desenharEtiquetas();
+    const ok = podeImprimir();
+    $("lblImprimir").hidden = !ok; $("lblSemImpressao").hidden = ok;
+    $("lblModal").hidden = false; document.body.style.overflow = "hidden"; $("lblFechar").focus();
+  }
+  function fecharEtiquetas() { $("lblModal").hidden = true; document.body.style.overflow = ""; aplicarTamanho(); }
+  $("lblQtd").addEventListener("input", desenharEtiquetas);
+  $("lblTam").addEventListener("change", desenharEtiquetas);
+  $("lblFechar").addEventListener("click", fecharEtiquetas);
+  $("lblModal").addEventListener("click", (e) => { if (e.target === $("lblModal")) fecharEtiquetas(); });
+  $("lblImprimir").addEventListener("click", () => {
+    $("etqPage").textContent = PAG_LBL[$("lblTam").value] || PAG_LBL.t50;
+    if (window.Android && window.Android.imprimir) window.Android.imprimir(); else window.print();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (!$("lblModal").hidden) fecharEtiquetas();
+    if (!$("camModal").hidden) fecharCamera();
+  });
+  window.addEventListener("storage", (e) => { if (e.key === EPKEY || e.key === EMVKEY) { eprod = load(EPKEY, []); emov = load(EMVKEY, []); renderEstoque(); } });
+
   ligarMascaras("c_"); ligarMascaras("e_");
-  renderSelectCli(); renderListaCli(); editarCliente(null); carregarEmpresa(); renderPedidos(); renderDespesas();
+  renderSelectCli(); renderListaCli(); editarCliente(null); carregarEmpresa(); renderPedidos(); renderDespesas(); renderEstoque();
   mostrarView(location.hash.slice(1));
 
   // ---------- Importar do fatiador ----------
