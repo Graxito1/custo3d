@@ -434,12 +434,22 @@ details.cat[open] > summary { border-bottom: 1px solid var(--line); }
 #lblPrint.t40 .lbl .ln { font-size: 6.5pt; }
 #lblPrint.a4 { display: grid; grid-template-columns: repeat(3, 63mm); gap: 0; justify-content: start; }
 #lblPrint.a4 .lbl { width: 63mm; height: 30mm; box-shadow: none; outline: .2mm dashed #bbbbbb; outline-offset: -.1mm; }
+#lblPrint.t100, #lblPrint.t100g { display: flex; flex-direction: column; align-items: center; gap: 4mm; }
+.folha10 { width: 100mm; height: 150mm; display: grid; grid-template-columns: repeat(2, 50mm); grid-template-rows: repeat(5, 30mm); background: #ffffff; box-shadow: 0 1px 4px rgba(0,0,0,.25); overflow: hidden; }
+.folha10 .lbl { box-shadow: none; outline: .2mm dashed #cccccc; outline-offset: -.1mm; }
+#lblPrint.t100g .lbl { width: 100mm; height: 150mm; padding: 8mm 7mm; gap: 5mm; }
+#lblPrint.t100g .lbl .ln { font-size: 20pt; max-height: 3.5em; }
+#lblPrint.t100g .lbl svg { height: 55mm; }
+#lblPrint.t100g .lbl .lc { font-size: 22pt; font-weight: 700; }
+@media screen and (max-width: 440px) { #lblPrint.t100, #lblPrint.t100g { zoom: .8; } }
 @media screen and (max-width: 440px) { #lblPrint.a4 { zoom: .55; } }
 @media print {
   #lblPrint { gap: 0; }
   #lblPrint:not(.a4) { display: block; }
   #lblPrint .lbl { box-shadow: none; }
-  #lblPrint:not(.a4) .lbl { break-after: page; page-break-after: always; }
+  #lblPrint.t50 .lbl, #lblPrint.t40 .lbl, #lblPrint.t100g .lbl { break-after: page; page-break-after: always; }
+  #lblPrint.t100, #lblPrint.t100g { gap: 0; display: block; }
+  .folha10 { box-shadow: none; break-after: page; page-break-after: always; }
 }
 @media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
 </style>
@@ -1112,7 +1122,7 @@ details.cat[open] > summary { border-bottom: 1px solid var(--line); }
         </div>
         <div class="f">
           <label for="lblTam">Papel</label>
-          <div class="inp"><select id="lblTam"><option value="t50">Etiqueta 50 × 30 mm</option><option value="t40">Etiqueta 40 × 25 mm</option><option value="a4">Folha A4 (3 por linha)</option></select></div>
+          <div class="inp"><select id="lblTam"><option value="t100">100 × 150 mm (10 etiquetas por folha)</option><option value="t100g">100 × 150 mm (1 etiqueta grande)</option><option value="t50">Etiqueta 50 × 30 mm</option><option value="t40">Etiqueta 40 × 25 mm</option><option value="a4">Folha A4 (3 por linha)</option></select></div>
         </div>
       </div>
       <div class="actions">
@@ -2205,14 +2215,17 @@ window.iniciarCusto3D = function () {
 
   // etiquetas de código de barras
   let lblProd = null;
-  const PAG_LBL = { t50: "@page { size: 50mm 30mm; margin: 0; }", t40: "@page { size: 40mm 25mm; margin: 0; }", a4: "@page { size: A4; margin: 10mm; }" };
+  const PAG_LBL = { t100: "@page { size: 100mm 150mm; margin: 0; }", t100g: "@page { size: 100mm 150mm; margin: 0; }", t50: "@page { size: 50mm 30mm; margin: 0; }", t40: "@page { size: 40mm 25mm; margin: 0; }", a4: "@page { size: A4; margin: 10mm; }" };
   function desenharEtiquetas() {
     if (!lblProd) return;
     const qtd = Math.max(1, Math.min(300, Math.round(n0($("lblQtd").value)) || 1));
     const tam = $("lblTam").value;
     const uma = `<div class="lbl"><div class="ln">${esc(lblProd.nome)}</div>${barrasTexto(lblProd.codigo)}<div class="lc">${esc(lblProd.codigo)}</div></div>`;
     $("lblPrint").className = tam;
-    $("lblPrint").innerHTML = uma.repeat(qtd);
+    if (tam === "t100") {
+      let h = ""; for (let i = 0; i < qtd; i += 10) h += `<div class="folha10">${uma.repeat(Math.min(10, qtd - i))}</div>`;
+      $("lblPrint").innerHTML = h;
+    } else $("lblPrint").innerHTML = uma.repeat(qtd);
     try { localStorage.setItem("calc3d-lbl-tam", tam); } catch (e) {}
   }
   function abrirEtiquetas(p, qtd) {
