@@ -1105,7 +1105,7 @@ details.cat[open] > summary { border-bottom: 1px solid var(--line); }
     <p class="hint" id="camModo" style="margin:0;justify-self:start"></p>
     <video id="camVideo" playsinline muted></video>
     <div class="scan-res" id="camRes" aria-live="polite" hidden></div>
-    <p class="hint" style="margin:0;justify-self:start">Aponte para o código. Para registrar o mesmo produto de novo, tire o código da frente da câmera e aponte outra vez.</p>
+    <p class="hint" style="margin:0;justify-self:start">Aponte para o código. A câmera fecha sozinha depois de ler. Para outra unidade, toque em Câmera de novo (ou aumente a Quantidade antes).</p>
     <div class="actions" style="justify-self:start"><button type="button" class="primary" id="camFechar">Fechar câmera</button></div>
   </div>
 </div>
@@ -2112,22 +2112,20 @@ window.iniciarCusto3D = function () {
     $("camModo").textContent = modoLeitor() === "saida" ? "Modo: SAÍDA de mercadoria" : "Modo: ENTRADA de mercadoria";
     $("camRes").hidden = true;
     $("camModal").hidden = false; document.body.style.overflow = "hidden";
-    let ultimo = "";
+    // lê UM código e fecha a câmera (evita registrar o mesmo produto várias vezes)
     const tick = async () => {
       if (!camStream) return;
       try {
         const achados = v.readyState >= 2 ? await det.detect(v) : [];
-        if (!achados.length) ultimo = "";
-        else {
-          const cod = normCod(achados[0].rawValue);
-          if (cod && cod !== ultimo) {
-            ultimo = cod;
-            const r = await lerCodigo(cod);
-            if (r) resultado($("camRes"), r.ok, r.msg, r.novo);
-          }
+        const cod = achados.length ? normCod(achados[0].rawValue) : "";
+        if (cod && camStream) {
+          fecharCamera();
+          await lerCodigo(cod);
+          $("scanRes").scrollIntoView({ behavior: "smooth", block: "center" });
+          return;
         }
       } catch (e) {}
-      camTmr = setTimeout(tick, 200);
+      if (camStream) camTmr = setTimeout(tick, 200);
     };
     tick();
   }
