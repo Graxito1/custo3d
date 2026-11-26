@@ -451,6 +451,19 @@ details.cat[open] > summary { border-bottom: 1px solid var(--line); }
   #lblPrint.t100, #lblPrint.t100g { gap: 0; display: block; }
   .folha10 { box-shadow: none; break-after: page; page-break-after: always; }
 }
+/* Modo funcionário: o banco já não manda valores; aqui só some com o que ele não usa */
+body.modo-func header .lede, body.modo-func .tabs a[data-v="orcamento"],
+body.modo-func #despesas, body.modo-func #formEmp, body.modo-func #btnCopiarPed, body.modo-func #btnCopiarEst,
+body.modo-func #pedidos .kpi:not(:first-child), body.modo-func #estoque .kpi:last-child,
+body.modo-func #pedidos .tbl tr > :nth-child(5), body.modo-func #pedidos .tbl tr > :nth-child(6), body.modo-func #pedidos .tbl tr > :nth-child(8),
+body.modo-func #pedBody [data-a="abrir"], body.modo-func #pedBody [data-a="del"],
+body.modo-func #eWrap .tbl tr > :nth-child(5), body.modo-func .f:has(> .inp #ePCusto),
+body.modo-func #btnNovoCli, body.modo-func #btnSalvarCli, body.modo-func #btnOrcCli, body.modo-func #btnExcluirCli, body.modo-func #cliPedBox { display: none !important; }
+body.modo-func #pedidos .kpis, body.modo-func #estoque .kpis { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.func-aviso { display: inline-block; margin-left: 10px; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; vertical-align: middle; background: color-mix(in srgb, var(--c-ext) 18%, transparent); color: var(--ink); }
+.eq-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.eq-lista li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
+.eq-lista li span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 @media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
 </style>
 </head>
@@ -1043,6 +1056,21 @@ details.cat[open] > summary { border-bottom: 1px solid var(--line); }
         <button type="submit" class="primary">Salvar dados da empresa</button>
         <span class="toast" id="toastEmp" role="status"></span>
       </div>
+      <fieldset id="equipeBox" hidden>
+        <legend>Funcionários</legend>
+        <p class="note">O funcionário entra no site com o login dele e só usa <b>Estoque</b>, <b>Pedidos</b> (só muda o status) e <b>Clientes</b> (só consulta e etiqueta de envio). Ele não vê orçamentos, despesas nem nenhum valor em dinheiro. Primeiro crie o login dele no Supabase (Authentication → Users → Add user) e depois adicione o e-mail aqui.</p>
+        <div class="row">
+          <div class="f span2">
+            <label for="eqEmail">E-mail do funcionário</label>
+            <div class="inp"><input id="eqEmail" type="email" autocomplete="off" placeholder="funcionario@email.com"></div>
+          </div>
+        </div>
+        <div class="cad-acoes">
+          <button type="button" class="primary" id="btnEqAdd">Adicionar funcionário</button>
+          <span class="toast" id="toastEq" role="status"></span>
+        </div>
+        <ul class="eq-lista" id="eqLista"></ul>
+      </fieldset>
       <fieldset>
         <legend>Backup dos dados</legend>
         <p class="note">Os cadastros, orçamentos e configurações ficam guardados só neste navegador ou aparelho. Para passar do PC para o celular, ou para não perder nada, copie o backup e guarde o texto (num bloco de notas ou mandando para você mesmo no WhatsApp). Para restaurar, cole o texto no campo abaixo.</p>
@@ -1139,6 +1167,15 @@ details.cat[open] > summary { border-bottom: 1px solid var(--line); }
 <script>
 window.iniciarCusto3D = function () {
   const $ = (id) => document.getElementById(id);
+  const FUNC = !!window.C3D_FUNCIONARIO;
+  if (FUNC) {
+    document.body.classList.add("modo-func");
+    const h = document.querySelector("header h1");
+    if (h && !h.querySelector(".func-aviso")) h.insertAdjacentHTML("beforeend", ' <span class="func-aviso">Funcionário</span>');
+    // clientes: só consulta
+    document.querySelectorAll("#formCli input, #formCli textarea").forEach((el) => (el.readOnly = true));
+    $("formCli").addEventListener("submit", (e) => { e.preventDefault(); e.stopImmediatePropagation(); }, true);
+  }
   const ids = ["nome","peso","horas","minutos","qtd","precoKg","impressora","watts","kwh","lucro","energiaFixaValor","energiaFixaModo","precoFixoValor","cliente","imgId","link"];
   const KEY = "calc3d-config-v2";
   const LKEY = "calc3d-salvos-v1";
@@ -1572,7 +1609,8 @@ window.iniciarCusto3D = function () {
   // Abas
   const VIEWS = { orcamento: "vOrcamento", clientes: "vClientes", empresa: "vEmpresa" };
   function mostrarView(v) {
-    if (!VIEWS[v]) v = "orcamento";
+    if (!VIEWS[v]) v = FUNC ? "empresa" : "orcamento";
+    if (FUNC && v === "orcamento") v = "empresa";
     Object.entries(VIEWS).forEach(([k, id]) => ($(id).hidden = k !== v));
     document.querySelectorAll(".tabs a").forEach((a) => { if (a.dataset.v === v) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   }
@@ -2271,7 +2309,42 @@ window.iniciarCusto3D = function () {
   window.addEventListener("storage", (e) => { if (e.key === EPKEY || e.key === EMVKEY) { eprod = load(EPKEY, []); emov = load(EMVKEY, []); renderEstoque(); } });
 
   ligarMascaras("c_"); ligarMascaras("e_");
-  renderSelectCli(); renderListaCli(); editarCliente(null); carregarEmpresa(); renderPedidos(); renderDespesas(); renderEstoque();
+  // ---------- Funcionários (só o dono, só com a nuvem do site) ----------
+  async function carregarEquipe() {
+    const u = window.nuvemUsuario && window.nuvemUsuario();
+    if (FUNC || !window.nuvemReq || !u) return;
+    $("equipeBox").hidden = false;
+    try {
+      const r = await window.nuvemReq("/rest/v1/custo3d_equipe?select=membro_id,email,criado_em&dono_id=eq." + u.id + "&order=criado_em");
+      $("eqLista").innerHTML = (r || []).length
+        ? r.map((m) => `<li data-id="${esc(m.membro_id)}"><span>${esc(m.email || "")}<small class="hint" style="display:block">desde ${fmtData(m.criado_em)}</small></span><button type="button" class="perigo" data-a="rem">Remover</button></li>`).join("")
+        : `<li><span class="hint">Nenhum funcionário ainda.</span></li>`;
+    } catch (e) {
+      $("eqLista").innerHTML = `<li><span class="hint">${/custo3d_equipe|404|does not exist|schema cache/i.test(e.message + e.status) ? "Para usar funcionários, rode primeiro o arquivo supabase-funcionarios.sql no Supabase." : esc(e.message)}</span></li>`;
+    }
+  }
+  $("btnEqAdd").addEventListener("click", async () => {
+    const email = $("eqEmail").value.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { avisoEm("toastEq", "Digite o e-mail do funcionário"); $("eqEmail").focus(); return; }
+    $("btnEqAdd").disabled = true;
+    try {
+      await window.nuvemReq("/rest/v1/rpc/c3d_adicionar_funcionario", { method: "POST", body: JSON.stringify({ p_email: email }) });
+      $("eqEmail").value = ""; avisoEm("toastEq", "Funcionário adicionado. Ele já pode entrar com o login dele.");
+      carregarEquipe();
+    } catch (e) { avisoEm("toastEq", e.message); }
+    finally { $("btnEqAdd").disabled = false; }
+  });
+  $("eqLista").addEventListener("click", async (e) => {
+    const b = e.target.closest("button[data-a=rem]"); if (!b) return;
+    if (!b.classList.contains("confirmar")) { b.classList.add("confirmar"); b.textContent = "Confirmar"; setTimeout(() => { b.classList.remove("confirmar"); b.textContent = "Remover"; }, 4000); return; }
+    try {
+      await window.nuvemReq("/rest/v1/custo3d_equipe?membro_id=eq." + encodeURIComponent(b.closest("li").dataset.id), { method: "DELETE", headers: { Prefer: "return=minimal" } });
+      avisoEm("toastEq", "Funcionário removido. Ele perde o acesso na hora.");
+      carregarEquipe();
+    } catch (err) { avisoEm("toastEq", err.message); }
+  });
+
+  renderSelectCli(); renderListaCli(); editarCliente(null); carregarEmpresa(); renderPedidos(); renderDespesas(); renderEstoque(); carregarEquipe();
   mostrarView(location.hash.slice(1));
 
   // ---------- Importar do fatiador ----------
@@ -2434,7 +2507,7 @@ window.iniciarCusto3D = function () {
   } catch (e) {}
 };
 </script>
-<script src="nuvem-supabase.js?v=4"></script>
+<script src="nuvem-supabase.js?v=5"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {});</script>
 </body>
 </html>

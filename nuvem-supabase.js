@@ -13,6 +13,9 @@
   const USR = "c3dsync-usuario";             // id do usuário já sincronizado neste aparelho
   const FILA = "c3dsync-fila";               // alterações ainda não enviadas
   const META = "c3dsync-meta";               // data da última versão recebida de cada chave
+  const PAPEL = "c3dsync-papel";             // "dono" ou "funcionario"
+  // o que o funcionário pode gravar (o banco confere de novo)
+  const FUNC_GRAVA = ["calc3d-pedidos-v1", "calc3d-estoque-produtos-v1", "calc3d-estoque-mov-v1"];
   const TABELA = "custo3d_dados";
   const TEMPO_LIMITE = 10000;
 
@@ -34,6 +37,8 @@
   let fila = lerJ(FILA, {});
   let meta = lerJ(META, {});
   let pronto = false;
+  let papel = lerJ(PAPEL, "dono");
+  const funcionario = () => papel === "funcionario";
   let enviando = false;
   let tmr = null;
   let semRede = false;
@@ -120,6 +125,25 @@
     enviando = true;
     const foto = Object.assign({}, fila);
     try {
+      if (funcionario()) {
+        // funcionário: só estoque e status de pedido, pelas funções do banco
+        for (const k of ks) {
+          if (foto[k].op !== "set" || !FUNC_GRAVA.includes(k)) continue;
+          const r = ls.getItem(k); if (r === null) continue;
+          let v; try { v = JSON.parse(r); } catch (e) { continue; }
+          await req("/rest/v1/rpc/c3d_func_gravar", { method: "POST", body: JSON.stringify({ p_chave: k, p_valor: v, p_em: foto[k].em }) });
+        }
+        ks.forEach((k) => {
+          if (fila[k] && fila[k].em === foto[k].em) {
+            if (foto[k].op === "set" && FUNC_GRAVA.includes(k)) meta[k] = Date.parse(foto[k].em);
+            delete fila[k];
+          }
+        });
+        gravarJ(FILA, fila); gravarJ(META, meta);
+        status("Nuvem sincronizada", "ok");
+        if (Object.keys(fila).length) agendar(300);
+        return;
+      }
       const linhas = [];
       ks.filter((k) => foto[k].op === "set").forEach((k) => {
         const r = ls.getItem(k);
@@ -167,6 +191,7 @@
 
   // ---------- Receber dados ----------
   async function baixarTudo() {
+    if (funcionario()) return (await req("/rest/v1/rpc/c3d_func_ler", { method: "POST", body: "{}" })) || [];
     const todas = [];
     for (let off = 0; ; off += 200) {
       const r = await req("/rest/v1/" + TABELA + "?select=chave,valor,atualizado_em&order=chave&limit=200&offset=" + off);
@@ -189,7 +214,30 @@
     chavesLocais().forEach((k) => (fila[k] = { op: "set", em: agora }));
   }
 
+  // pergunta ao banco se este login é dono ou funcionário
+  async function definirPapel() {
+    let novo = papel;
+    try {
+      const r = await req("/rest/v1/rpc/c3d_meu_papel", { method: "POST", body: "{}" });
+      novo = r && r.papel === "funcionario" ? "funcionario" : "dono";
+    } catch (e) {
+      if (e.offline || e.sessao) throw e;
+      if (e.status === 404 || /c3d_meu_papel/.test(e.message)) novo = "dono";   // SQL de funcionários ainda não instalado
+      else throw e;
+    }
+    if (novo !== papel) {
+      // mudou (virou funcionário ou deixou de ser): limpa os dados deste aparelho e recomeça
+      chavesLocais().forEach(apagar);
+      fila = {}; meta = {}; gravarJ(FILA, fila); gravarJ(META, meta);
+      papel = novo; gravarJ(PAPEL, papel);
+      return true;
+    }
+    return false;
+  }
+
   async function puxar() {
+    const mudou = await definirPapel();
+    if (mudou && iniciado) { location.reload(); return; }
     const remotas = await baixarTudo();
     const remoto = {};
     remotas.forEach((l) => (remoto[l.chave] = l));
@@ -197,7 +245,11 @@
 
     if (ls.getItem(USR) !== uid) {
       // primeira sincronização deste aparelho com esta conta
-      if (!remotas.length) {
+      if (funcionario()) {
+        fila = {};
+        chavesLocais().forEach((k) => { if (!remoto[k]) apagar(k); });
+        remotas.forEach(aplicar);
+      } else if (!remotas.length) {
         enfileirarTudoLocal();                       // leva os dados atuais para a nuvem
       } else if (temDadosLocais() && !confirm(
         "Já existem dados do Custo 3D na nuvem.\n\n" +
@@ -255,7 +307,7 @@
     if (n && !confirm(n + " alteração(ões) ainda não foram para a nuvem e serão perdidas. Sair mesmo assim?")) { statusFila(); return; }
     try { await req("/auth/v1/logout", { method: "POST" }); } catch (e) {}
     chavesLocais().forEach(apagar);
-    [SES, USR, FILA, META].forEach(apagar);
+    [SES, USR, FILA, META, PAPEL].forEach(apagar);
     location.reload();
   }
 
@@ -297,8 +349,11 @@
 
   // ---------- Início ----------
   let iniciado = false;
+  window.nuvemReq = (caminho, op) => req(caminho, op);
+  window.nuvemUsuario = () => (sessao && sessao.user ? { id: sessao.user.id, email: sessao.user.email } : null);
   function abrirApp() {
     if (iniciado) return; iniciado = true;
+    window.C3D_FUNCIONARIO = funcionario();
     try { window.iniciarCusto3D(); } catch (e) { console.error(e); }
   }
 
