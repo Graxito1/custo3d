@@ -1918,7 +1918,8 @@ window.iniciarCusto3D = function () {
   let eprod = load(EPKEY, []);
   let emov = load(EMVKEY, []);
   let editEProd = null;
-  const normCod = (s) => String(s || "").trim().toUpperCase();
+  // tira espaços, caracteres invisíveis e o prefixo de identificação que alguns leitores mandam (ex.: "]C0")
+  const normCod = (s) => String(s || "").replace(/[\x00-\x1f\x7f]/g, "").trim().replace(/^\][A-Za-z][0-9A-Za-z]/, "").trim().toUpperCase();
   const fmtQtd = (n) => String(Math.round((+n || 0) * 1000) / 1000).replace(".", ",");
   const modoLeitor = () => (document.querySelector('input[name="eModo"]:checked') || {}).value || "saida";
   const n0 = (v) => { const x = parseFloat(String(v).replace(",", ".")); return isFinite(x) && x > 0 ? x : 0; };
@@ -1934,7 +1935,14 @@ window.iniciarCusto3D = function () {
     const n = eprod.reduce((m, p) => { const r = /^JR(\d+)$/.exec(normCod(p.codigo)); return r ? Math.max(m, +r[1]) : m; }, 0) + 1;
     return "JR" + String(n).padStart(5, "0");
   }
-  function salvarEstoque() { save(EPKEY, eprod); save(EMVKEY, emov); renderEstoque(); }
+  function salvarEstoque(so) {
+    if (so !== "mov") save(EPKEY, eprod);
+    if (so !== "prod") save(EMVKEY, emov);
+    renderEstoque();
+  }
+  // relê o que está gravado (pode ter vindo da nuvem, de outro aparelho)
+  function recarregarEstoque() { eprod = load(EPKEY, []); emov = load(EMVKEY, []); }
+  window.addEventListener("nuvem-atualizada", () => { recarregarEstoque(); renderEstoque(); });
 
   // Code 128 (conjunto B): letras, números e símbolos
   function barrasTexto(txt) {
@@ -1960,12 +1968,13 @@ window.iniciarCusto3D = function () {
   }
 
   function movimentar(p, tipo, qtd, obs, dataISO) {
+    emov = load(EMVKEY, []);
     if (tipo === "saida") {
       const s = saldoDe(p.id);
       if (s < qtd) return { ok: false, msg: `Estoque insuficiente: ${p.nome} tem ${fmtQtd(s)} ${p.un}. Lance a entrada antes.` };
     }
     emov.push({ id: "m" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), data: dataISO || new Date().toISOString(), prodId: p.id, nome: p.nome, codigo: p.codigo, tipo, qtd, obs: obs || "" });
-    salvarEstoque();
+    salvarEstoque("mov");
     const s = saldoDe(p.id);
     const baixo = p.min > 0 && s <= p.min;
     return { ok: true, msg: `${tipo === "saida" ? "Saída" : "Entrada"}: ${p.nome} · ${tipo === "saida" ? "−" : "+"}${fmtQtd(qtd)} · saldo ${fmtQtd(s)} ${p.un}${baixo ? " · ⚠ abaixo do mínimo" : ""}` };
@@ -1976,10 +1985,18 @@ window.iniciarCusto3D = function () {
     el.innerHTML = (ok ? "✓ " : "✕ ") + esc(msg) + (codNovo ? ` <button type="button" class="linkbtn" data-novo-cod="${esc(codNovo)}">Cadastrar este código</button>` : "");
   }
 
-  function lerCodigo(cod) {
+  async function lerCodigo(cod) {
     const c = normCod(cod);
     if (!c) return null;
-    const p = prodPorCodigo(c);
+    recarregarEstoque();
+    let p = prodPorCodigo(c);
+    if (!p && window.nuvemAtualizar) {
+      // pode ter sido cadastrado em outro aparelho: busca na nuvem antes de dizer que não existe
+      resultado($("scanRes"), true, `Procurando ${c} na nuvem…`);
+      try { await window.nuvemAtualizar(true); } catch (e) {}
+      recarregarEstoque(); renderEstoque();
+      p = prodPorCodigo(c);
+    }
     let r;
     if (!p) r = { ok: false, msg: `Código ${c} não está cadastrado.`, novo: c };
     else r = movimentar(p, modoLeitor(), Math.max(1, n0($("eScanQtd").value) || 1), $("eScanObs").value.trim());
@@ -2105,7 +2122,7 @@ window.iniciarCusto3D = function () {
           const cod = normCod(achados[0].rawValue);
           if (cod && cod !== ultimo) {
             ultimo = cod;
-            const r = lerCodigo(cod);
+            const r = await lerCodigo(cod);
             if (r) resultado($("camRes"), r.ok, r.msg, r.novo);
           }
         }
@@ -2139,6 +2156,7 @@ window.iniciarCusto3D = function () {
   $("btnSalvarEProd").addEventListener("click", () => {
     const nome = $("ePNome").value.trim();
     if (!nome) { avisoEm("toastEst", "Coloque o nome do produto"); $("ePNome").focus(); return; }
+    recarregarEstoque();
     let codigo = normCod($("ePCod").value) || proximoCodigo();
     if ([...codigo].some((ch) => ch.charCodeAt(0) < 32 || ch.charCodeAt(0) > 126)) { avisoEm("toastEst", "Use só letras sem acento, números e símbolos simples no código"); return; }
     const dono = prodPorCodigo(codigo);
@@ -2172,7 +2190,7 @@ window.iniciarCusto3D = function () {
       $("eCad").open = true; $("eCad").scrollIntoView({ behavior: "smooth", block: "start" }); $("ePNome").focus();
     } else if (b.dataset.a === "del") {
       if (!b.classList.contains("confirmar")) { b.classList.add("confirmar"); b.textContent = "Confirmar"; setTimeout(() => { b.classList.remove("confirmar"); b.textContent = "Excluir"; }, 4000); return; }
-      eprod = eprod.filter((x) => x.id !== p.id); salvarEstoque();
+      eprod = load(EPKEY, []).filter((x) => x.id !== p.id); salvarEstoque("prod");
       avisoEm("toastEst", "Produto removido do estoque. As movimentações antigas continuam no histórico.");
     }
   });
@@ -2198,7 +2216,7 @@ window.iniciarCusto3D = function () {
   $("eMovBody").addEventListener("click", (e) => {
     const b = e.target.closest("button[data-a=del]"); if (!b) return;
     if (!b.classList.contains("confirmar")) { b.classList.add("confirmar"); b.textContent = "Confirmar"; setTimeout(() => { b.classList.remove("confirmar"); b.textContent = "Excluir"; }, 4000); return; }
-    emov = emov.filter((m) => m.id !== b.closest("tr").dataset.id); salvarEstoque(); avisoEm("toastEst", "Movimentação excluída. O saldo foi recalculado.");
+    emov = load(EMVKEY, []).filter((m) => m.id !== b.closest("tr").dataset.id); salvarEstoque("mov"); avisoEm("toastEst", "Movimentação excluída. O saldo foi recalculado.");
   });
   $("btnCopiarEst").addEventListener("click", () => {
     const s = saldos(), n2 = (v) => (Math.round(v * 100) / 100).toFixed(2).replace(".", ",");
@@ -2418,7 +2436,7 @@ window.iniciarCusto3D = function () {
   } catch (e) {}
 };
 </script>
-<script src="nuvem-supabase.js?v=3"></script>
+<script src="nuvem-supabase.js?v=4"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {});</script>
 </body>
 </html>

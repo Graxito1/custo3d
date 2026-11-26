@@ -302,6 +302,29 @@
     try { window.iniciarCusto3D(); } catch (e) { console.error(e); }
   }
 
+  // ---------- Atualizar sem fechar o app ----------
+  // Busca o que mudou na nuvem (ex.: produto cadastrado em outro aparelho)
+  // e avisa a tela com o evento "nuvem-atualizada".
+  let puxando = null, ultimaPuxada = Date.now();
+  window.nuvemAtualizar = function (forcar) {
+    if (!logado() || !iniciado) return Promise.resolve(false);
+    if (puxando) return puxando;
+    if (!forcar && Date.now() - ultimaPuxada < 20000) return Promise.resolve(false);
+    ultimaPuxada = Date.now();
+    puxando = (async () => {
+      try { pronto = true; await enviar(); } catch (e) {}
+      try {
+        await puxar(); statusFila();
+        window.dispatchEvent(new Event("nuvem-atualizada"));
+        return true;
+      } catch (e) { return false; }
+      finally { puxando = null; }
+    })();
+    return puxando;
+  };
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") window.nuvemAtualizar(); });
+  window.addEventListener("focus", () => window.nuvemAtualizar());
+
   ligarTela();
   if (logado() && vinculado()) {
     status("Sincronizando…", "");
